@@ -1,0 +1,6 @@
+artifacts/*
+build/*
+config-cluster
+config-master
+config-node
+mukube-bootscript/*
