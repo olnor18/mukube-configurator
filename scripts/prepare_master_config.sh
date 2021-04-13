@@ -4,6 +4,9 @@ VARIABLES=$2
 
 source $VARIABLES
 
+# A master node has the same configuration as a normal node and more.
+./scripts/prepare_node_config.sh $CONFIG_OUTPUT_FILE $VARIABLES
+
 if [ -z "$MASTER_TAINT" ];
 then
     # Default value is true
@@ -23,15 +26,15 @@ then
     exit 1
 fi
 
-if [ -z "$MASTER_NETWORK_INTERFACE" ]
+if [ -z "$NODE_NETWORK_INTERFACE" ]
 then
-    echo "[error] MASTER_NETWORK_INTERFACE required"
+    echo "[error] NODE_NETWORK_INTERFACE required"
     exit 1
 fi
 
-if [ -z $MASTER_HOST_IP ]
+if [ -z $NODE_HOST_IP ]
 then
-    echo "[error] MASTER_HOST_IP required"
+    echo "[error] NODE_HOST_IP required"
     exit 1
 fi
 
@@ -65,8 +68,8 @@ then
 fi
 
 echo "MASTER_TAINT=$MASTER_TAINT" >> $CONFIG_OUTPUT_FILE
-echo "MASTER_NETWORK_INTERFACE=$MASTER_NETWORK_INTERFACE" >> $CONFIG_OUTPUT_FILE
-echo "MASTER_HOST_IP=$MASTER_HOST_IP" >> $CONFIG_OUTPUT_FILE
+echo "NODE_NETWORK_INTERFACE=$NODE_NETWORK_INTERFACE" >> $CONFIG_OUTPUT_FILE
+echo "NODE_HOST_IP=$NODE_HOST_IP" >> $CONFIG_OUTPUT_FILE
 echo "MASTER_CERTIFICATE_KEY=$MASTER_CERTIFICATE_KEY" >> $CONFIG_OUTPUT_FILE
 echo "MASTER_PROXY_PRIORITY=$MASTER_PROXY_PRIORITY" >> $CONFIG_OUTPUT_FILE
 echo "MASTER_PROXY_STATE=$MASTER_PROXY_STATE" >> $CONFIG_OUTPUT_FILE

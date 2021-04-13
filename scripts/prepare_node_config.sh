@@ -17,11 +17,18 @@ fi
 if [ -z $NODE_JOIN_TOKEN ]
 then
     echo "[error] NODE_JOIN_TOKEN required."
+    exit 1
 fi
 
 if [ -z $NODE_TYPE ]
 then
     NODE_TYPE=worker
+fi
+
+if [ -z "$NODE_NAME" ]
+then
+    echo "[error] $NODE_NAME required"
+    exit 1
 fi
 
 echo "NODE_TYPE=$NODE_TYPE" > $CONFIG_OUTPUT_FILE
