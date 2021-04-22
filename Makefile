@@ -4,8 +4,8 @@ CONFIG ?= config
 
 
 default: $(CONFIG) docker-kubeadm pull-container-images build/root/helm-charts
-	./scripts/prepare_cluster.sh build/cluster $(CONFIG)
-	./scripts/build_cluster.sh build/cluster
+	./scripts/prepare_cluster.sh build/nodes $(CONFIG)
+	./scripts/build_cluster.sh build/nodes
 
 
 help:
