@@ -1,7 +1,7 @@
 #!/bin/bash
 NODEDIR=$1
 
-OUTDIR=artifacts/cluster
+OUTDIR=artifacts
 mkdir -p $OUTDIR
 
 # Pack every node
