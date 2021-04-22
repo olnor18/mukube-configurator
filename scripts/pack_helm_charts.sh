@@ -2,13 +2,9 @@
 DIR=$1
 mkdir $DIR -p
 cat helm_requirements | grep -w ".*http.*"   | while read p; do
-  echo $p
-  url=$(echo $p | cut -f1 -d' ')
-  release=$(echo $p | cut -f2 -d' ')
-  namespace=$(echo $p | cut -f3 -d' ')
-  filename=$(echo $url | rev | cut -f1 -d/ | rev)
-  # Download and rename file to include release and namespace
-  $(wget -O "$DIR/$release#$namespace#$filename" $url)
+  export p
+  export DIR
+  scripts/pack_single_helm_chart.sh
 done
 
 numberOfFiles=$(ls $DIR | wc -l)
