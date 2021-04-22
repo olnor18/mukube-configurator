@@ -3,7 +3,7 @@ DIR=$1
 mkdir $DIR -p
 cat helm_requirements | while read p; do
   echo $p 
-  scripts/pack_single_helm_chart.sh $DIR $p
+  scripts/pack_single_helm_chart.sh $DIR ${p//%/ }
 done
 
 numberOfFiles=$(ls $DIR | wc -l)
