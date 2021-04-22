@@ -2,9 +2,7 @@
 DIR=$1
 mkdir $DIR -p
 cat helm_requirements | grep -w ".*http.*"   | while read p; do
-  export p
-  export DIR
-  scripts/pack_single_helm_chart.sh
+  scripts/pack_single_helm_chart.sh $p $DIR
 done
 
 numberOfFiles=$(ls $DIR | wc -l)
