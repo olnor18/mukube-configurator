@@ -1,8 +1,9 @@
 #!/bin/bash
 DIR=$1
 mkdir $DIR -p
-cat helm_requirements | grep -w ".*http.*"   | while read p; do
-  scripts/pack_single_helm_chart.sh $p $DIR
+cat helm_requirements | while read p; do
+  echo $p 
+  scripts/pack_single_helm_chart.sh $DIR $p
 done
 
 numberOfFiles=$(ls $DIR | wc -l)
