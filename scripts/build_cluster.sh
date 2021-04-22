@@ -5,7 +5,7 @@ OUTDIR=artifacts/cluster
 mkdir -p $OUTDIR
 
 # Pack every node
-for node in $NODEDIR/master/* $NODEDIR/worker/*; do
+for node in $NODEDIR/*; do
 	archive_path=$OUTDIR/$(basename $node).tar
 	echo "[INFO] Archiving $node --> $archive_path"
 	tar -cf $archive_path -C $node .
