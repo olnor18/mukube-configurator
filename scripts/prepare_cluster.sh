@@ -49,7 +49,7 @@ for ((i=0; i<${#HOSTS[@]}; i++)); do
     export NODE_HOST_IP=${HOSTS[i]}
     export NODE_NAME=master$i
     export MASTER_PROXY_PRIORITY=$(expr 100 - $i)
-    OUTPUT_DIR_MASTER=$OUTPUT_DIR/master/master$i
+    OUTPUT_DIR_MASTER=$OUTPUT_DIR/master$i
 
     if [ $i = 0 ];
     then
@@ -61,7 +61,7 @@ for ((i=0; i<${#HOSTS[@]}; i++)); do
     fi
 
     OUTPUT_PATH_CONF=$OUTPUT_DIR_MASTER/mukube_init_config
-    mkdir $OUTPUT_DIR_MASTER -p
+    mkdir -p $OUTPUT_DIR_MASTER
 
     ./scripts/prepare_master_config.sh $OUTPUT_PATH_CONF $VARIABLES
     ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_MASTER templates
@@ -79,7 +79,7 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
     export NODE_HOST_IP=${WORKERS[i]}
     export NODE_NAME=worker$i
 
-    OUTPUT_DIR_WORKER=$OUTPUT_DIR/worker/worker$i
+    OUTPUT_DIR_WORKER=$OUTPUT_DIR/worker$i
     mkdir -p $OUTPUT_DIR_WORKER
 
     cp templates/boot.sh $OUTPUT_DIR_WORKER
