@@ -13,6 +13,6 @@ for node in $NODEDIR/*; do
 	#Pack the images and helm charts for master nodes
 	if [[ $node == *"master"* ]]; then
 		echo "	* adding helm-charts and container-images"
-		tar -rf $archive_path -C build root/helm-charts root/container-images
+		tar -rf $archive_path -C build root/helm-charts root/container-images --exclude **/.empty
 	fi
 done

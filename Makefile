@@ -20,7 +20,7 @@ CONTAINER_IMAGES =
 # We sanitize the image filenames replacing / and : with .
 define PULL_AND_SAVE_IMAGE
 CONTAINER_IMAGES += $(CONTAINER_DIR)/$(subst :,.,$(subst /,.,$1)).tar
-$(CONTAINER_DIR)/$(subst :,.,$(subst /,.,$1)).tar : $(CONTAINER_DIR)/.create
+$(CONTAINER_DIR)/$(subst :,.,$(subst /,.,$1)).tar : $(CONTAINER_DIR)/.empty
 	docker pull $1 && docker save -o $$@ $1
 endef
 
@@ -28,10 +28,9 @@ $(foreach I,$(shell cat $(IMAGE_REQUIREMENTS)),$(eval $(call PULL_AND_SAVE_IMAGE
 
 ## pull-container-images: Pull and save all container images in IMAGE_REQUIREMENTS
 .PHONY : pull-container-images
-pull-container-images : $(CONTAINER_DIR)/.create $(CONTAINER_IMAGES)
-$(CONTAINER_DIR)/.create :
-	mkdir -p $(@D)
-	touch $@
+pull-container-images : $(CONTAINER_DIR)/.empty $(CONTAINER_IMAGES)
+$(CONTAINER_DIR)/.empty :
+	mkdir -p $(@D) && touch $@
 
 ## docker-kubeadm: build the kubeadocker image used to generate join_tokens and certificates
 .PHONY : docker-kubeadm
