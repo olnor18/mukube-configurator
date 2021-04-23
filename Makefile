@@ -33,16 +33,21 @@ pull-container-images : $(CONTAINER_DIR)/.empty $(CONTAINER_IMAGES)
 $(CONTAINER_DIR)/.empty :
 	mkdir -p $(@D) && touch $@
 
+
 HELM_DIR = build/root/helm-charts
-HELM_CHARTS = 
+# It is important that HELM_CHARTS is evaluated immediately ( := ) otherwise only the last helm package rule gets added
+HELM_CHARTS := 
 
-define PACK_HELM_CHART
-HELM_CHARTS += $(HELM_DIR)/$(shell echo $1 | cut -d % -f 2)\#$(shell echo $1 | cut -d % -f 3)\#$(notdir $(shell echo $1 | cut -d % -f 1))
-$(HELM_DIR)/$(shell echo $1 | cut -d % -f 2)\#$(shell echo $1 | cut -d % -f 3)\#$(notdir $(shell echo $1 | cut -d % -f 1)) : $(HELM_DIR)/.empty
-	wget -O $$@ $(shell echo $1 | cut -d % -f 1) 
-
+# Create make targets to download the helm packages specified in the HELM_REQUIREMENTS 
+define DOWNLOAD_HELM_PACKAGE
+url = $(shell echo $1 | cut -d % -f 1 )
+release = $(shell echo $1 | cut -d % -f 2 )
+namespace = $(shell echo $1 | cut -d % -f 3)
+HELM_CHARTS += $(HELM_DIR)/$$(release)\#$$(namespace)\#$$(notdir $$(url))
+$(HELM_DIR)/$$(release)\#$$(namespace)\#$$(notdir $$(url)) : $(HELM_DIR)/.empty
+	wget --quiet --show-progress -O $$@ $$(url) 
 endef
-$(foreach L,$(shell cat $(HELM_REQUIREMENTS)),$(eval $(call PACK_HELM_CHART,$L))) 
+$(foreach L,$(shell cat $(HELM_REQUIREMENTS)),$(eval $(call DOWNLOAD_HELM_PACKAGE,$L))) 
 
 pack-helm-charts : $(HELM_DIR)/.empty $(HELM_CHARTS)
 $(HELM_DIR)/.empty :
