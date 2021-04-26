@@ -45,7 +45,7 @@ release = $(shell echo $1 | cut -d % -f 2 )
 namespace = $(shell echo $1 | cut -d % -f 3)
 HELM_CHARTS += $(HELM_DIR)/$$(release)\#$$(namespace)\#$$(notdir $$(url))
 $(HELM_DIR)/$$(release)\#$$(namespace)\#$$(notdir $$(url)) : $(HELM_DIR)/.empty
-	wget --quiet --show-progress -O $$@ $$(url) 
+	curl -L $$(url) -o $$@ 
 endef
 $(foreach L,$(shell cat $(HELM_REQUIREMENTS)),$(eval $(call DOWNLOAD_HELM_PACKAGE,$L))) 
 
