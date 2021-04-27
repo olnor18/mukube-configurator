@@ -9,3 +9,6 @@ eval "cat <<EOF
 $(<$TEMPLATES_DIR/10-systemd-network.network )
 EOF
 " > $OUTPUT_DIR/10-systemd-network.network
+
+# Configure the DNS by moving the static template file 
+cp $TEMPLATES_DIR/resolved.conf $WORKING_DIR/etc/systemd/resolved.conf
