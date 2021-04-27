@@ -10,7 +10,7 @@ $(<$TEMPLATES_DIR/10-systemd-network.network )
 EOF
 " > $OUTPUT_DIR/10-systemd-network.network
 
-# Configure the DNS by moving the static template file 
+# Configure the DNS by creating the resolved.conf 
 if [[ $CONFIGURE_DNS = "true" ]]
 then
     if [ -z "$CLUSTER_DNS" ]
