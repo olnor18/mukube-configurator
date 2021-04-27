@@ -4,6 +4,8 @@
 source mukube_init_config
 hostnamectl set-hostname $NODE_NAME
 echo  "127.0.1.1	$NODE_NAME" >> /etc/hosts
+# Activate the ip_vs kernel module to allow for load balancing. Required by Keepalived.
+modprobe ip_vs
 case $NODE_TYPE in
     "master")
         echo "MASTER NODE SETUP"
