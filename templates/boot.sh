@@ -6,6 +6,8 @@ hostnamectl set-hostname $NODE_NAME
 echo  "127.0.1.1	$NODE_NAME" >> /etc/hosts
 case $NODE_TYPE in
     "master")
+        # Activate the ip_vs kernel module to allow for load balancing. Required by Keepalived.
+        modprobe ip_vs
         echo "MASTER NODE SETUP"
         # Import all the container image tarballs into containerd local registry
         for FILE in /root/container-images/*; do
