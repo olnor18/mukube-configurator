@@ -1,7 +1,8 @@
 #!/bin/bash
 DIR=$1
+HELM_REQUIREMENTS=$2
 mkdir $DIR -p
-cat helm_requirements.txt | grep -w ".*http.*"   | while read p; do
+cat $HELM_REQUIREMENTS | grep -w ".*http.*"   | while read p; do
   echo $p
   url=$(echo $p | cut -f1 -d' ')
   release=$(echo $p | cut -f2 -d' ')
@@ -12,7 +13,7 @@ cat helm_requirements.txt | grep -w ".*http.*"   | while read p; do
 done
 
 numberOfFiles=$(ls $DIR | wc -l)
-linesInFile=$(grep -w ".*http.*" -c helm_requirements.txt)
+linesInFile=$(grep -w ".*http.*" -c $HELM_REQUIREMENTS)
 
 if [ $numberOfFiles != $linesInFile ]; then
     echo "[error] Helm charts download failed. 
