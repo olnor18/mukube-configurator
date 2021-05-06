@@ -54,11 +54,6 @@ $(HELM_DIR)/.empty :
 	mkdir -p $(@D) && touch $@ 
 
 
-# ## docker-kubeadm: build the kubeadocker image used to generate join_tokens and certificates
-# .PHONY : docker-kubeadm
-# docker-kubeadm:
-# 	docker build -t kubeadocker - < Dockerfile
-
 ## clean: remove output from the build
 clean:
 	rm -rf artifacts
