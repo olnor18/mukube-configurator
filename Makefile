@@ -3,7 +3,7 @@ IMAGE_REQUIREMENTS ?= image_requirements
 CONFIG ?= config
 
 
-default: $(CONFIG) pull-container-images pack-helm-charts
+default: $(CONFIG) docker-kubeadm pull-container-images pack-helm-charts
 	./scripts/prepare_cluster.sh build/nodes $(CONFIG)
 	./scripts/build_cluster.sh build/nodes
 
@@ -53,6 +53,11 @@ pack-helm-charts : $(HELM_DIR)/.empty $(HELM_CHARTS)
 $(HELM_DIR)/.empty :
 	mkdir -p $(@D) && touch $@ 
 
+
+## docker-kubeadm: build the kubeadocker image used to generate join_tokens and certificates
+.PHONY : docker-kubeadm
+docker-kubeadm:
+	docker build -t kubeadocker - < Dockerfile
 
 ## clean: remove output from the build
 clean:
