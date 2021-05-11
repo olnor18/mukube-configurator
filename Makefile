@@ -1,6 +1,6 @@
-HELM_REQUIREMENTS ?= helm_requirements
-IMAGE_REQUIREMENTS ?= image_requirements
-CONFIG ?= config
+HELM_REQUIREMENTS ?= config/helm_requirements
+IMAGE_REQUIREMENTS ?= config/image_requirements
+CONFIG ?= config/config
 
 
 default: $(CONFIG) docker-kubeadm pull-container-images pack-helm-charts
