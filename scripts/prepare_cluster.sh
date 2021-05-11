@@ -34,6 +34,13 @@ then
     echo "[error] NODE_GATEWAY_IP required"
     exit 1
 fi
+
+if [ -z $CLUSTER_NAME ]
+then
+    echo "[INFO] CLUSTER_NAME not set. Using default: test"
+    CLUSTER_NAME="test"
+fi
+
 # MAKE HOST_IP list
 IFS=, read -ra HOSTS <<< "$MASTER_VIP_CLUSTER_IPS"
 
@@ -46,12 +53,13 @@ export NODE_GATEWAY_IP=$NODE_GATEWAY_IP
 export NODE_TYPE=master
 export CONFIGURE_DNS=$CONFIGURE_DNS
 export CLUSTER_DNS=$CLUSTER_DNS
+export CLUSTER_NAME=$CLUSTER_NAME
 
 for ((i=0; i<${#HOSTS[@]}; i++)); do
     export NODE_HOST_IP=${HOSTS[i]}
     export NODE_NAME=master$i
     export MASTER_PROXY_PRIORITY=$(expr 100 - $i)
-    OUTPUT_DIR_MASTER=$OUTPUT_DIR/master$i
+    OUTPUT_DIR_MASTER=$OUTPUT_DIR/$CLUSTER_NAME-master$i
 
     if [ $i = 0 ];
     then
@@ -81,7 +89,7 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
     export NODE_HOST_IP=${WORKERS[i]}
     export NODE_NAME=worker$i
 
-    OUTPUT_DIR_WORKER=$OUTPUT_DIR/worker$i
+    OUTPUT_DIR_WORKER=$OUTPUT_DIR/$CLUSTER_NAME-worker$i
     mkdir -p $OUTPUT_DIR_WORKER
 
     cp templates/boot.sh $OUTPUT_DIR_WORKER
