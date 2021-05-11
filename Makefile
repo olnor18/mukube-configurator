@@ -61,5 +61,4 @@ docker-kubeadm:
 
 ## clean: remove output from the build
 clean:
-	rm -rf artifacts
-	rm -rf build
+	rm -rf artifacts build
