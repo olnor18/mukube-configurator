@@ -35,7 +35,7 @@ A join token to use by other nodes joining the cluster. This is used to establis
 A key used to encrypt the certificates.
 
 ### CONFIGURE_DNS
-A true flag to determine whether to configure DNS. If it is set to true the DNS is configured according to the CLUSTER_DNS setting.
+A flag to determine whether to configure DNS. If it is set to true the DNS is configured according to the CLUSTER_DNS setting.
 
 ### CLUSTER_DNS
 The IP of the DNS server the cluster should use.
