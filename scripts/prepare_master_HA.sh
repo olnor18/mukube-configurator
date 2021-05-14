@@ -48,7 +48,7 @@ EOF
 
 export STATE=$MASTER_PROXY_STATE
 export INTERFACE=$NODE_NETWORK_INTERFACE
-export ROUTER_ID=51 # Default value
+export ROUTER_ID=$(echo $NODE_CONTROL_PLANE_VIP | cut -d . -f 4)
 export PRIORITY=$MASTER_PROXY_PRIORITY
 export AUTH_PASS=42 # Default value
 
