@@ -11,7 +11,7 @@ case $NODE_TYPE in
         echo "MASTER NODE SETUP"
         # Import all the container image tarballs into containerd local registry
         for FILE in /root/container-images/*; do
-          ctr image import $FILE
+          ctr --namespace k8s.io image import $FILE
         done
         case $MASTER_CREATE_CLUSTER in
             "true")
