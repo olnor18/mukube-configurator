@@ -8,50 +8,36 @@ source $CONF
 
 mkdir -p $OUTPUT_DIR
 
-if [ $NODE_TYPE == "master" ]
-then
-TAINT_MASTER_YAML=""
-
-if [ $MASTER_TAINT == "true" ]
-then
-export TAINT_MASTER_YAML="taints:
-  - effect: NoSchedule
-    key: node-role.kubernetes.io/master"
-else 
-export TAINT_MASTER_YAML="taints: []"
-fi
-
-if [ $MASTER_CREATE_CLUSTER == "true" ]
-then
-eval "cat <<EOF
-$(<$TEMPLATES_DIR/InitConfiguration.yaml )
----
-$(<$TEMPLATES_DIR/ClusterConfiguration.yaml )
-EOF
-" > $OUTPUT_DIR/InitConfiguration.yaml
-else
-export CONTROL_PLANE_REGISTRATION="controlPlane: 
-    certificateKey: $MASTER_CERTIFICATE_KEY
-    localAPIEndpoint:
-      advertiseAddress: ${NODE_HOST_IP}
-      bindPort: 6443"
-eval "cat <<EOF
-$(<$TEMPLATES_DIR/JoinConfiguration.yaml )
----
-$(<$TEMPLATES_DIR/ClusterConfiguration.yaml )
-EOF
-" > $OUTPUT_DIR/JoinConfiguration.yaml
-fi
-else
-export NODE_REGISTRATION="taints: []"
-
-eval "cat <<EOF
-$(<$TEMPLATES_DIR/JoinConfiguration.yaml )
----
-$(<$TEMPLATES_DIR/ClusterConfiguration.yaml )
-EOF
-" > $OUTPUT_DIR/JoinConfiguration.yaml
-fi
-
-
-
+case $NODE_TYPE in 
+	master*)
+		if [ $MASTER_TAINT == "true" ]
+		then 
+			export TAINT_MASTER_YAML=$'taints:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/master'
+		else
+			export TAINT_MASTER_YAML="taints: []"
+		fi
+	;;&
+	master-init)
+		eval "cat <<-EOF
+			$(<$TEMPLATES_DIR/InitConfiguration.yaml )
+			---
+			$(<$TEMPLATES_DIR/ClusterConfiguration.yaml )
+		EOF
+		" > $OUTPUT_DIR/InitConfiguration.yaml
+	;;
+	master-join) 
+		export CONTROL_PLANE_REGISTRATION=$'controlPlane:\n    certificateKey: '${MASTER_CERTIFICATE_KEY}$'\n    localAPIEndpoint:\n      advertiseAddress: '${NODE_HOST_IP}$'\n      bindPort: 6443'
+	;;&
+	worker)
+		# NB: This value is never used. 
+		export NODE_REGISTRATION="taints: []"
+	;;&
+	master-join | worker)
+		eval "cat <<-EOF
+			$(<$TEMPLATES_DIR/JoinConfiguration.yaml )
+			---
+			$(<$TEMPLATES_DIR/ClusterConfiguration.yaml )
+		EOF
+		" > $OUTPUT_DIR/JoinConfiguration.yaml
+	;;
+esac

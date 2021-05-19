@@ -31,14 +31,14 @@ case $NODE_TYPE in
         mkdir -p /etc/kubernetes/manifests
         mv /root/ha/* /etc/kubernetes/manifests
         init="kubeadm init --v=5 --config /etc/kubernetes/InitConfiguration.yaml --upload-certs" 
-        echo "Creating cluster with command: \n\n\t $init \n\n"
+        printf "Creating cluster with command: \n\n\t $init \n\n"
         $init 
         ;;&
     master-join | worker)
         echo "JOINING CLUSTER"
         # TODO remove unsafe verification by configuring certificates
         init="kubeadm join --v=5 --config /etc/kubernetes/JoinConfiguration.yaml"
-        echo "Joining cluster with command: \n\n\t $init \n\n"
+        printf "Joining cluster with command: \n\n\t $init \n\n"
         $init
         ;;&
     *) 
