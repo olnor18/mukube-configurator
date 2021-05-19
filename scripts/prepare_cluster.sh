@@ -50,7 +50,6 @@ export MASTER_CERTIFICATE_KEY=$MASTER_CERTIFICATE_KEY
 export NODE_NETWORK_INTERFACE=$NODE_NETWORK_INTERFACE
 export MASTER_TAINT=$MASTER_TAINT
 export NODE_GATEWAY_IP=$NODE_GATEWAY_IP
-export NODE_TYPE=master
 export CONFIGURE_DNS=$CONFIGURE_DNS
 export CLUSTER_DNS=$CLUSTER_DNS
 export CLUSTER_NAME=$CLUSTER_NAME
@@ -64,10 +63,10 @@ for ((i=0; i<${#HOSTS[@]}; i++)); do
     if [ $i = 0 ];
     then
         export MASTER_PROXY_STATE=MASTER
-        export MASTER_CREATE_CLUSTER=true
+        export NODE_TYPE=master-init
     else
         export MASTER_PROXY_STATE=BACKUP
-        export MASTER_CREATE_CLUSTER=false
+        export NODE_TYPE=master-join
     fi
 
     OUTPUT_PATH_CONF=$OUTPUT_DIR_MASTER/mukube_init_config
