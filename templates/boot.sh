@@ -57,4 +57,9 @@ case $NODE_TYPE in
         echo "Joining virtual ip setup"
         mv /root/ha/* /etc/kubernetes/manifests
         ;;&
+    master*)
+        echo "Copy client etcd certs to /var/lib/etcdctl" 
+        mkdir -p /var/lib/etcdctl 
+        cp /etc/kubernetes/pki/etcd/server.crt /etc/kubernetes/pki/etcd/server.key /etc/kubernetes/pki/etcd/ca.crt /var/lib/etcdctl
+        ;;&
 esac
