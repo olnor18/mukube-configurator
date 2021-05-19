@@ -4,7 +4,7 @@
 source mukube_init_config
 
 case $NODE_TYPE in
-    # gaurd clause for valid NODE_TYPE input
+    # guard clause for valid NODE_TYPE input
     master-init | master-join | worker) ;;
     *) echo "Invalid NODE_TYPE: $NODE_TYPE"; exit 1;;
 esac
