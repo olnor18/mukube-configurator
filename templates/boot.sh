@@ -46,6 +46,8 @@ case $NODE_TYPE in
         if (( $? != 0)); then echo "kubeadm failed"; exit 1; fi
         ;;&
     master-init)
+        # Need to export KUBECONFIG for helm to contact the api-server
+        export KUBECONFIG=/etc/kubernetes/admin.config
         echo "Installing included helm charts"
         for FILE in /root/helm-charts/*; do
             release=$(echo $FILE | cut -f4 -d/ | cut -f1 -d#)
