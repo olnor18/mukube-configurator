@@ -2,11 +2,21 @@
 
 # Load all the variables from the config.yaml file to variables
 source mukube_init_config
-hostnamectl set-hostname $NODE_NAME
-echo  "127.0.1.1	$NODE_NAME" >> /etc/hosts
+
 case $NODE_TYPE in
+    # gaurd clause for valid NODE_TYPE input
+    master-init | master-join | worker) ;;
+    *) echo "Invalid NODE_TYPE: $NODE_TYPE"; exit 1;;
+esac
+
+case $NODE_TYPE in
+    *)
+        # General setup
+        hostnamectl set-hostname $NODE_NAME
+        echo  "127.0.1.1	$NODE_NAME" >> /etc/hosts
+        ;;&
     master*)
-        # All masters setup
+        # masters setup
         echo "MASTER NODE SETUP"
         # Activate the ip_vs kernel module to allow for load balancing. Required by Keepalived.
         modprobe ip_vs
@@ -31,7 +41,7 @@ case $NODE_TYPE in
         echo "Joining cluster with command: \n\n\t $init \n\n"
         $init
         ;;&
-    master* | worker) 
+    *) 
         # Error handling for kubeadm
         if (( $? != 0)); then echo "kubeadm failed"; exit 1; fi
         ;;&
