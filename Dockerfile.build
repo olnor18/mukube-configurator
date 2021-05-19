@@ -1,0 +1,20 @@
+FROM ubuntu:20.04
+
+
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+	&& apt-get install -y apt dpkg apt-utils ca-certificates \
+	&& apt-get upgrade -y \
+	&& apt-get install -y \
+        curl \
+        git \
+        make \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /
+RUN git clone https://github.com/distributed-technologies/mukube-configurator.git
+WORKDIR /mukube-configurator
+RUN git checkout development
+
+ENTRYPOINT ["make"]
+

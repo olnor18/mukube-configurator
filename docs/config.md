@@ -34,6 +34,9 @@ A join token to use by other nodes joining the cluster. This is used to establis
 #### MASTER_CERTIFICATE_KEY
 A key used to encrypt the certificates.
 
+### CLUSTER_DNS
+Optional variable. If set this is the IP of the DNS server the cluster should use.
+
 ### Example file
 ```
 NODE_CONTROL_PLANE_VIP=192.168.1.150

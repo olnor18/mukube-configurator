@@ -1,4 +1,5 @@
 artifacts/*
 build/*
-config
-mukube-bootscript/*
+
+config/*
+helm_charts/*

@@ -11,7 +11,7 @@ case $NODE_TYPE in
         echo "MASTER NODE SETUP"
         # Import all the container image tarballs into containerd local registry
         for FILE in /root/container-images/*; do
-          ctr image import $FILE
+          ctr --namespace k8s.io image import $FILE
         done
         case $MASTER_CREATE_CLUSTER in
             "true")
@@ -19,13 +19,13 @@ case $NODE_TYPE in
                 printf "Bootstrapping virtual ip setup"
                 mkdir -p /etc/kubernetes/manifests
                 mv /root/ha/* /etc/kubernetes/manifests
-                init="kubeadm init --config /etc/kubernetes/InitConfiguration.yaml --upload-certs" 
+                init="kubeadm init --v=5 --config /etc/kubernetes/InitConfiguration.yaml --upload-certs" 
                 printf "Creating cluster with command: \n\n\t $init \n\n"
                 $init
                 ;;
             "false")
                 echo "JOINING CLUSTER"
-                init="kubeadm join --config /etc/kubernetes/JoinConfiguration.yaml"
+                init="kubeadm join --v=5 --config /etc/kubernetes/JoinConfiguration.yaml"
                 printf "Joining cluster with command: \n\n\t $init \n\n"
                 $init
                 ;;
@@ -54,7 +54,7 @@ case $NODE_TYPE in
     "worker")
         echo "WORKER NODE SETUP"
         # TODO remove unsafe verification by configuring certificates
-        init="kubeadm join --config /etc/kubernetes/JoinConfiguration.yaml"
+        init="kubeadm join --v=5 --config /etc/kubernetes/JoinConfiguration.yaml"
         printf "Creating cluster with command: \n\n\t $init \n\n"
         $init
         ;;
