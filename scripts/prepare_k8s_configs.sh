@@ -28,10 +28,6 @@ case $NODE_TYPE in
 	master-join) 
 		export CONTROL_PLANE_REGISTRATION=$'controlPlane:\n    certificateKey: '${MASTER_CERTIFICATE_KEY}$'\n    localAPIEndpoint:\n      advertiseAddress: '${NODE_HOST_IP}$'\n      bindPort: 6443'
 	;;&
-	worker)
-		# NB: This value is never used. 
-		export NODE_REGISTRATION="taints: []"
-	;;&
 	master-join | worker)
 		eval "cat <<-EOF
 			$(<$TEMPLATES_DIR/JoinConfiguration.yaml )
