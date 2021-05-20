@@ -47,7 +47,7 @@ case $NODE_TYPE in
         ;;&
     master-init)
         # Need to export KUBECONFIG for helm to contact the api-server
-        export KUBECONFIG=/etc/kubernetes/admin.config
+        export KUBECONFIG=/etc/kubernetes/admin.conf
         echo "Installing included helm charts"
         for FILE in /root/helm-charts/*; do
             release=$(echo $FILE | cut -f4 -d/ | cut -f1 -d#)
