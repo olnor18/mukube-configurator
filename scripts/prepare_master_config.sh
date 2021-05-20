@@ -20,12 +20,6 @@ else
     fi
 fi
 
-if [ -z "$MASTER_CREATE_CLUSTER" ]
-then
-    echo "[error] MASTER_CREATE_CLUSTER required"
-    exit 1
-fi
-
 if [ -z "$NODE_NETWORK_INTERFACE" ]
 then
     echo "[error] NODE_NETWORK_INTERFACE required"
@@ -64,7 +58,7 @@ fi
 
 if [ -z $NODE_TYPE ]
 then
-    NODE_TYPE=master
+    NODE_TYPE=master-join
 fi
 
 echo "MASTER_TAINT=$MASTER_TAINT" >> $CONFIG_OUTPUT_FILE
