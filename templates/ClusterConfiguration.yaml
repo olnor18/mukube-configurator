@@ -14,8 +14,8 @@ apiServer:
   timeoutForControlPlane: 4m0s
   extraArgs:
     enable-admission-plugins: DefaultTolerationSeconds
-    default-not-ready-toleration-seconds: "10"
-    default-unreachable-toleration-seconds: "10"
+    default-not-ready-toleration-seconds: 10
+    default-unreachable-toleration-seconds: 10
 controllerManager: {}
 etcd:
   local:
