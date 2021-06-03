@@ -18,4 +18,5 @@ nodeRegistration:
   criSocket: unix:///run/containerd/containerd.sock
   kubeletExtraArgs:
     cgroup-driver: "systemd"
+    resolv-conf: /etc/resolv.conf
   ${TAINT_MASTER_YAML}
