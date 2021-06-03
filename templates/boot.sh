@@ -30,10 +30,9 @@ case $NODE_TYPE in
         echo "Bootstrapping virtual ip setup"
         mkdir -p /etc/kubernetes/manifests
         mv /root/ha/* /etc/kubernetes/manifests
-        init="kubeadm init --v=5 --config /etc/kubernetes/InitConfiguration.yaml --upload-certs --skip-phases addon" 
+        init="kubeadm init --v=5 --config /etc/kubernetes/InitConfiguration.yaml --upload-certs" 
         printf "Creating cluster with command: \n\n\t $init \n\n"
         $init
-        kubeadm init phase addon kube-proxy
         ;;&
     master-join | worker)
         echo "JOINING CLUSTER"
