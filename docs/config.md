@@ -3,7 +3,7 @@ Configuration for what is needed to set up a HA that is part of a highly availab
 NODE_CONTROL_PLANE_VIP=
 NODE_CONTROL_PLANE_PORT=
 MASTER_TAINT=
-NODE_NETWORK_INTERFACE=
+NODE_NETWORK_INTERFACES=
 MASTER_VIP_CLUSTER_IPS=
 MASTER_CERT_DIR=
 NODE_JOIN_TOKEN=
@@ -19,8 +19,8 @@ The port where the control plane should listens on.
 #### MASTER_TAINT
 Either true or false. If this master node should be tainted, meaning that no pods other than the static pods, will be scheduled to run here. Defaluts to true.
 
-#### NODE_NETWORK_INTERFACE
-The name of the network interface where the devices are discoverable.
+#### NODE_NETWORK_INTERFACES
+The names of the network interfaces where the devices are discoverable.
 
 #### MASTER_VIP_CLUSTER_IPS
 A comma separated list of ips of all the master nodes.
@@ -42,7 +42,7 @@ Optional variable. If set this is the IP of the DNS server the cluster should us
 NODE_CONTROL_PLANE_VIP=192.168.1.150
 NODE_CONTROL_PLANE_PORT=4200
 MASTER_TAINT=false
-NODE_NETWORK_INTERFACE=eth0
+NODE_NETWORK_INTERFACES=eth0,eth0,eth0,ensp4,eth1
 MASTER_VIP_CLUSTER_IPS=192.168.1.100,192.168.1.101,192.168.1.102,
 WORKER_IPS=192.168.1.110,192.168.1.111
 NODE_GATEWAY_IP=192.168.1.1
