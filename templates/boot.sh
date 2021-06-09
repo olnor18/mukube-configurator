@@ -14,6 +14,7 @@ case $NODE_TYPE in
         # General setup
         hostnamectl set-hostname $NODE_NAME
         echo  "127.0.1.1	$NODE_NAME" >> /etc/hosts
+        echo  "192.168.1.200	harbor.sc.garagen" >> /etc/hosts
         ;;&
     master*)
         # masters setup
@@ -32,7 +33,7 @@ case $NODE_TYPE in
         mv /root/ha/* /etc/kubernetes/manifests
         init="kubeadm init --v=5 --config /etc/kubernetes/InitConfiguration.yaml --upload-certs" 
         printf "Creating cluster with command: \n\n\t $init \n\n"
-        $init 
+        $init
         ;;&
     master-join | worker)
         echo "JOINING CLUSTER"

@@ -17,9 +17,9 @@ then
     NODE_JOIN_TOKEN=$(docker run kubeadocker token generate)
 fi
 
-if [ -z "$NODE_NETWORK_INTERFACE" ]
+if [ -z "$NODE_NETWORK_INTERFACES" ]
 then
-    echo "[error] NODE_NETWORK_INTERFACE required"
+    echo "[error] NODE_NETWORK_INTERFACES required"
     exit 1
 fi
 
@@ -42,19 +42,31 @@ then
 fi
 
 # MAKE HOST_IP list
-IFS=, read -ra HOSTS <<< "$MASTER_VIP_CLUSTER_IPS"
+IFS=, read -ra MASTERS <<< "$MASTER_VIP_CLUSTER_IPS"
+IFS=, read -ra WORKERS <<< "$WORKER_IPS"
+IFS=, read -ra INTERFACES <<< "$NODE_NETWORK_INTERFACES"
+
+total_nodes=$(expr ${#MASTERS[@]} + ${#WORKERS[@]})
+total_interfaces=${#INTERFACES[@]}
+
+if [ $total_nodes -ne $total_interfaces ]
+then
+    echo "[ERROR] Number of interfaces specified is not equal to the total number of masters and workers"
+    exit 1
+fi
+
 
 # Export all variables for script scope
 export NODE_JOIN_TOKEN=$NODE_JOIN_TOKEN
 export MASTER_CERTIFICATE_KEY=$MASTER_CERTIFICATE_KEY
-export NODE_NETWORK_INTERFACE=$NODE_NETWORK_INTERFACE
 export MASTER_TAINT=$MASTER_TAINT
 export NODE_GATEWAY_IP=$NODE_GATEWAY_IP
 export CLUSTER_DNS=$CLUSTER_DNS
 export CLUSTER_NAME=$CLUSTER_NAME
 
-for ((i=0; i<${#HOSTS[@]}; i++)); do
-    export NODE_HOST_IP=${HOSTS[i]}
+for ((i=0; i<${#MASTERS[@]}; i++)); do
+    export NODE_NETWORK_INTERFACE=${INTERFACES[i]}
+    export NODE_HOST_IP=${MASTERS[i]}
     export NODE_NAME=master$i
     export MASTER_PROXY_PRIORITY=$(expr 100 - $i)
     OUTPUT_DIR_MASTER=$OUTPUT_DIR/$CLUSTER_NAME-master$i
@@ -78,12 +90,12 @@ for ((i=0; i<${#HOSTS[@]}; i++)); do
     cp templates/boot.sh $OUTPUT_DIR_MASTER
 done
 
-# MAKE HOST_IP list
-IFS=, read -ra WORKERS <<< "$WORKER_IPS"
-
 # Prepare the worker nodes
 export NODE_TYPE=worker
 for ((i=0; i<${#WORKERS[@]}; i++)); do
+    number_of_masters=${#MASTERS[@]}
+    interface_index=$(expr $i + $number_of_masters)
+    export NODE_NETWORK_INTERFACE=${INTERFACES[interface_index]}
     export NODE_HOST_IP=${WORKERS[i]}
     export NODE_NAME=worker$i
 
