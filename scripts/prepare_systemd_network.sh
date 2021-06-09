@@ -10,15 +10,7 @@ $(<$TEMPLATES_DIR/10-systemd-network.network )
 EOF
 " > $OUTPUT_DIR/10-systemd-network.network
 
-# # Configure the DNS by creating the resolved.conf 
-# if [ $CLUSTER_DNS ]
-# then
-# eval "cat <<EOF
-# $(<$TEMPLATES_DIR/resolved.conf)
-# EOF
-# " > $WORKING_DIR/etc/systemd/resolved.conf
-# fi
-# Configure the DNS by creating the resolved.conf 
+# Configure the DNS by creating the resolv.conf 
 if [ $CLUSTER_DNS ]
 then
 eval "cat <<EOF
