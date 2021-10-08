@@ -15,7 +15,7 @@ localAPIEndpoint:
 certificateKey: ${MASTER_CERTIFICATE_KEY}
 nodeRegistration:
   name: ${NODE_NAME}
-  criSocket: unix:///run/containerd/containerd.sock
+  criSocket: unix:///var/run/crio/crio.sock
   kubeletExtraArgs:
     cgroup-driver: "systemd"
     resolv-conf: /etc/resolv.conf
