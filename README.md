@@ -21,4 +21,4 @@ A user in the docker group
 Use this command to add the current user to docker and reboot.
 `sudo usermod -aG docker $USER`
 
-
+`e2fsprogs` is required for creating the ext4 filesystem.
