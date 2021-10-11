@@ -2,7 +2,7 @@
 
 ## About
 
-This is the repository for the configuration of a bare metal high available kubernetes cluster with load-balancing services supported. Outputs a tarball that can should be unpacked in the root of a linux filesystem. The cluster assumes a systemd cgroups are used as well as containerd as the container runtime.
+This is the repository for the configuration of a bare metal high available kubernetes cluster with load-balancing services supported. Outputs a tarball that can should be unpacked in the root of a linux filesystem. The cluster assumes a systemd cgroups are used as well as CRIO as the container runtime.
 
 ## Structure
 The entry point for the project is the make file in the root folder, which reads a config file for a full cluster setup.

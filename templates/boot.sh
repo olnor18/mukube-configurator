@@ -23,7 +23,7 @@ case $NODE_TYPE in
         modprobe ip_vs
         # Import all the container image tarballs into containerd local registry
         for FILE in /root/container-images/*; do
-          ctr --namespace k8s.io image import $FILE
+          podman load -i $FILE
         done
         ;;& 
     master-init)
@@ -37,7 +37,6 @@ case $NODE_TYPE in
         ;;&
     master-join | worker)
         echo "JOINING CLUSTER"
-        # TODO remove unsafe verification by configuring certificates
         init="kubeadm join --v=5 --config /etc/kubernetes/JoinConfiguration.yaml"
         printf "Joining cluster with command: \n\n\t $init \n\n"
         $init
