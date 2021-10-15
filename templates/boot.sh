@@ -12,9 +12,8 @@ esac
 case $NODE_TYPE in
     *)
         # General setup
-        hostnamectl set-hostname $NODE_NAME
+        hostname $NODE_NAME
         echo  "127.0.1.1	$NODE_NAME" >> /etc/hosts
-        echo  "192.168.1.200	harbor.sc.garagen" >> /etc/hosts
         ;;&
     master*)
         # masters setup
@@ -22,8 +21,9 @@ case $NODE_TYPE in
         # Activate the ip_vs kernel module to allow for load balancing. Required by Keepalived.
         modprobe ip_vs
         # Import all the container image tarballs into containerd local registry
-        for FILE in /root/container-images/*; do
+        for FILE in /var/lib/skopeo/*; do
           podman load -i $FILE
+	  podman tag localhost$FILE k8s.gcr.io/$(basename $FILE)
         done
         ;;& 
     master-init)
