@@ -83,6 +83,8 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
     OUTPUT_PATH_CONF=$OUTPUT_DIR_MASTER/mukube_init_config
     mkdir -p $OUTPUT_DIR_MASTER
 
+    mkdir -p $OUTPUT_DIR_MASTER/etc/containers/
+    cp templates/registries.conf $OUTPUT_DIR_MASTER/etc/containers/
     ./scripts/prepare_master_config.sh $OUTPUT_PATH_CONF $VARIABLES
     ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_MASTER templates
     ./scripts/prepare_master_HA.sh $OUTPUT_DIR_MASTER templates
@@ -102,6 +104,8 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
     OUTPUT_DIR_WORKER=$OUTPUT_DIR/$CLUSTER_NAME-worker$i
     mkdir -p $OUTPUT_DIR_WORKER
 
+    mkdir -p $OUTPUT_DIR_WORKER/etc/containers/
+    cp templates/registries.conf $OUTPUT_DIR_WORKER/etc/containers/
     cp templates/boot.sh $OUTPUT_DIR_WORKER
     ./scripts/prepare_node_config.sh $OUTPUT_DIR_WORKER/mukube_init_config $VARIABLES
     ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_WORKER templates
