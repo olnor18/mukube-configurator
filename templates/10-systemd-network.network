@@ -4,6 +4,7 @@ Name=${NODE_NETWORK_INTERFACE}
 [Network]
 Address=${NODE_HOST_IP}
 Gateway=${NODE_GATEWAY_IP}
+DNS=${CLUSTER_DNS}
 LinkLocalAddressing=no
 
 [DHCP]

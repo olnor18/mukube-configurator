@@ -38,7 +38,7 @@ A join token to use by other nodes joining the cluster. This is used to establis
 A key used to encrypt the certificates.
 
 ### CLUSTER_DNS
-Optional variable. If set this is the IP of the DNS server the cluster should use.
+The IP of the DNS server the cluster should use.
 
 ### LB_IP_RANGE_START
 First IP address in the range to allocate for the load balancer.
