@@ -8,6 +8,9 @@ MASTER_VIP_CLUSTER_IPS=
 MASTER_CERT_DIR=
 NODE_JOIN_TOKEN=
 MASTER_CERTIFICATE_KEY=
+LB_IP_RANGE_START=
+LB_IP_RANGE_STOP=
+INGRESS_LB_IP_ADDRESS=
 ```
 
 #### NODE_CONTROL_PLANE_VIP
@@ -37,6 +40,15 @@ A key used to encrypt the certificates.
 ### CLUSTER_DNS
 Optional variable. If set this is the IP of the DNS server the cluster should use.
 
+### LB_IP_RANGE_START
+First IP address in the range to allocate for the load balancer.
+
+### LB_IP_RANGE_STOP
+Last IP address in the range to allocate for the load balancer.
+
+### INGRESS_LB_IP_ADDRESS
+Load balancer IP to allocate for the ingress.
+
 ### Example file
 ```
 NODE_CONTROL_PLANE_VIP=192.168.1.150
@@ -46,4 +58,7 @@ NODE_NETWORK_INTERFACES=eth0,eth0,eth0,ensp4,eth1
 MASTER_VIP_CLUSTER_IPS=192.168.1.100,192.168.1.101,192.168.1.102,
 WORKER_IPS=192.168.1.110,192.168.1.111
 NODE_GATEWAY_IP=192.168.1.1
+LB_RANGE_START=192.168.1.20
+LB_RANGE_STOP=192.168.1.30
+INGRESS_LB_IP_ADDRESS=192.168.1.30
 ```
