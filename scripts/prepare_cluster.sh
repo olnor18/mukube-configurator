@@ -90,6 +90,10 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
     ./scripts/prepare_master_HA.sh $OUTPUT_DIR_MASTER templates
     ./scripts/prepare_k8s_configs.sh $OUTPUT_DIR_MASTER templates
     cp templates/boot.sh $OUTPUT_DIR_MASTER
+    sed -i $OUTPUT_DIR_MASTER/boot.sh \
+      -e "s/\$\$LB_IP_RANGE_START/$LB_IP_RANGE_START/g" \
+      -e "s/\$\$LB_IP_RANGE_STOP/$LB_IP_RANGE_STOP/g" \
+      -e "s/\$\$INGRESS_LB_IP_ADDRESS/$INGRESS_LB_IP_ADDRESS/g"
 done
 
 # Prepare the worker nodes
@@ -107,6 +111,10 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
     mkdir -p $OUTPUT_DIR_WORKER/etc/containers/
     cp templates/registries.conf $OUTPUT_DIR_WORKER/etc/containers/
     cp templates/boot.sh $OUTPUT_DIR_WORKER
+    sed -i $OUTPUT_DIR_MASTER/boot.sh \
+      -e "s/\$\$LB_IP_RANGE_START/$LB_IP_RANGE_START/g" \
+      -e "s/\$\$LB_IP_RANGE_STOP/$LB_IP_RANGE_STOP/g"
+      -e "s/\$\$INGRESS_LB_IP_ADDRESS/$INGRESS_LB_IP_ADDRESS/g"
     ./scripts/prepare_node_config.sh $OUTPUT_DIR_WORKER/mukube_init_config $VARIABLES
     ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_WORKER templates
     ./scripts/prepare_k8s_configs.sh $OUTPUT_DIR_WORKER templates

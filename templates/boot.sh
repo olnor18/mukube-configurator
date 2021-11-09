@@ -46,7 +46,11 @@ case $NODE_TYPE in
         for FILE in /root/helm-charts/*; do
             release=$(echo $FILE | cut -f4 -d/ | cut -f1 -d#)
             namespace=$(echo $FILE | cut -f4 -d/ | cut -f2 -d#)
-            helm install --create-namespace -n $namespace $release $FILE
+            helm install --create-namespace -n $namespace \
+              --set yggdrasil.loadbalancer.ipRangeStart=$$LB_IP_RANGE_START \
+              --set yggdrasil.loadbalancer.ipRangeStop=$$LB_IP_RANGE_STOP \
+              --set yggdrasil.ingress.loadBalancerIP=$$INGRESS_LB_IP_ADDRESS \
+              $release $FILE
         done
         ;;&
     master-join)
