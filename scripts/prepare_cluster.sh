@@ -63,6 +63,13 @@ export MASTER_TAINT=$MASTER_TAINT
 export NODE_GATEWAY_IP=$NODE_GATEWAY_IP
 export CLUSTER_DNS=$CLUSTER_DNS
 export CLUSTER_NAME=$CLUSTER_NAME
+export PROXY_SERVER=${PROXY_SERVER:-http://nidhogg-lb-proxy.yggdrasil.svc.cluster.local:80}
+
+crio_sysconfig="$(mktemp)"
+cat <<EOF > "$crio_sysconfig"
+http_proxy="$PROXY_SERVER"
+https_proxy="$PROXY_SERVER"
+EOF
 
 for ((i=0; i<${#MASTERS[@]}; i++)); do
     export NODE_NETWORK_INTERFACE=${INTERFACES[i]}
@@ -85,6 +92,10 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
 
     mkdir -p $OUTPUT_DIR_MASTER/etc/containers/
     cp templates/registries.conf $OUTPUT_DIR_MASTER/etc/containers/
+    if [ -n "$PROXY_EXTERNAL_PROXY" ]; then
+        mkdir -p "$OUTPUT_DIR_MASTER/etc/sysconfig"
+        cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/sysconfig/crio"
+    fi
     ./scripts/prepare_master_config.sh $OUTPUT_PATH_CONF $VARIABLES
     ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_MASTER templates
     ./scripts/prepare_master_HA.sh $OUTPUT_DIR_MASTER templates
@@ -93,7 +104,9 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
     sed -i $OUTPUT_DIR_MASTER/boot.sh \
       -e "s/\$\$LB_IP_RANGE_START/$LB_IP_RANGE_START/g" \
       -e "s/\$\$LB_IP_RANGE_STOP/$LB_IP_RANGE_STOP/g" \
-      -e "s/\$\$INGRESS_LB_IP_ADDRESS/$INGRESS_LB_IP_ADDRESS/g"
+      -e "s/\$\$INGRESS_LB_IP_ADDRESS/$INGRESS_LB_IP_ADDRESS/g" \
+      -e "s/\$\$PROXY_EXTERNAL_PROXY/$PROXY_EXTERNAL_PROXY/g" \
+      -e "s#\$\$PROXY_SERVER#$PROXY_SERVER#g"
 done
 
 # Prepare the worker nodes
@@ -110,12 +123,20 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
 
     mkdir -p $OUTPUT_DIR_WORKER/etc/containers/
     cp templates/registries.conf $OUTPUT_DIR_WORKER/etc/containers/
+    if [ -n "$PROXY_EXTERNAL_PROXY" ]; then
+        mkdir -p "$OUTPUT_DIR_WORKER/etc/sysconfig"
+        cp "$crio_sysconfig" "$OUTPUT_DIR_WORKER/etc/sysconfig/crio"
+    fi
     cp templates/boot.sh $OUTPUT_DIR_WORKER
     sed -i $OUTPUT_DIR_MASTER/boot.sh \
       -e "s/\$\$LB_IP_RANGE_START/$LB_IP_RANGE_START/g" \
       -e "s/\$\$LB_IP_RANGE_STOP/$LB_IP_RANGE_STOP/g"
-      -e "s/\$\$INGRESS_LB_IP_ADDRESS/$INGRESS_LB_IP_ADDRESS/g"
+      -e "s/\$\$INGRESS_LB_IP_ADDRESS/$INGRESS_LB_IP_ADDRESS/g" \
+      -e "s/\$\$PROXY_EXTERNAL_PROXY/$PROXY_EXTERNAL_PROXY/g" \
+      -e "s#\$\$PROXY_SERVER#$PROXY_SERVER#g"
     ./scripts/prepare_node_config.sh $OUTPUT_DIR_WORKER/mukube_init_config $VARIABLES
     ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_WORKER templates
     ./scripts/prepare_k8s_configs.sh $OUTPUT_DIR_WORKER templates
 done
+
+rm "$crio_sysconfig"

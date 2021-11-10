@@ -50,6 +50,10 @@ case $NODE_TYPE in
               --set yggdrasil.loadbalancer.ipRangeStart=$$LB_IP_RANGE_START \
               --set yggdrasil.loadbalancer.ipRangeStop=$$LB_IP_RANGE_STOP \
               --set yggdrasil.ingress.loadBalancerIP=$$INGRESS_LB_IP_ADDRESS \
+              --set lb-proxy.enabled=true \
+              --set lb-proxy.config.externalProxy=$$PROXY_EXTERNAL_PROXY \
+              --set argo-cd-proxy-chart.config.httpProxy=$$PROXY_SERVER \
+              --set argo-cd-proxy-chart.config.serviceSubnet=10.96.0.0/12 \
               $release $FILE
         done
         ;;&
