@@ -18,5 +18,5 @@ nodeRegistration:
   criSocket: unix:///var/run/crio/crio.sock
   kubeletExtraArgs:
     cgroup-driver: "systemd"
-    resolv-conf: /etc/resolv.conf
+    resolv-conf: /etc/resolv.conf.kubelet
   ${TAINT_MASTER_YAML}
