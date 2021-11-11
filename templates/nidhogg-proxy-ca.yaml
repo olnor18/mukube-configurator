@@ -1,0 +1,19 @@
+  argo-cd:
+    server:
+      volumeMounts:
+        - mountPath: /etc/ssl/certs/ca-certificates.crt
+          name: root-pem
+      volumes:
+        - name: root-pem
+          hostPath:
+            path: /etc/crio/ssl/root.pem
+            type: File
+    repoServer:
+      volumeMounts:
+        - mountPath: /etc/ssl/certs/ca-certificates.crt
+          name: root-pem
+      volumes:
+        - name: root-pem
+          hostPath:
+            path: /etc/crio/ssl/root.pem
+            type: File
