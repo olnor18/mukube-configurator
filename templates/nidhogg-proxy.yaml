@@ -1,0 +1,8 @@
+lb-proxy:
+  enabled: true
+  config:
+    externalProxy: $PROXY_EXTERNAL_PROXY
+argo-cd-proxy-chart:
+  config:
+    httpProxy: $PROXY_SERVER
+    serviceSubnet: 10.96.0.0/12

@@ -12,6 +12,8 @@ The entry point for the project is the make file in the root folder, which reads
 ### helm_requirements.txt
 All helm charts repos listed in this file will be downloaded and packed into the tarball. The charts will then be installed by the node that creates the cluster. Each line in the file should contain 3 things, seperated by a `%`: First the release name, second the namespace and lastly the url of the repo.
 
+### values/<helm release>.yaml
+Values to use for the helm release.
 
 ### Dependencies
 A user in the docker group

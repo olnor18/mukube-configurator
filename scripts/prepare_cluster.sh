@@ -92,21 +92,26 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
 
     mkdir -p $OUTPUT_DIR_MASTER/etc/containers/
     cp templates/registries.conf $OUTPUT_DIR_MASTER/etc/containers/
+    OUTPUT_PATH_VALUES="$OUTPUT_DIR_MASTER/root/helm-charts/values"
+    mkdir -p "$OUTPUT_PATH_VALUES"
+    eval "echo \"$(<templates/nidhogg-lb.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
     if [ -n "$PROXY_EXTERNAL_PROXY" ]; then
         mkdir -p "$OUTPUT_DIR_MASTER/etc/sysconfig"
         cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/sysconfig/crio"
+    fi
+    eval "echo \"$(<templates/nidhogg-proxy.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
+    OUTPUT_PATH_VALUES_OVERRIDE="$OUTPUT_DIR/../root/helm-charts/values/"
+    if [ -f "$OUTPUT_PATH_VALUES_OVERRIDE/nidhogg.yaml" ]; then
+        # https://github.com/mikefarah/yq
+        # https://mikefarah.gitbook.io/yq/v/v4.x/operators/reduce#merge-all-yaml-files-together
+        yq eval-all '. as $item ireduce ({}; . * $item )' "$OUTPUT_PATH_VALUES/nidhogg.yaml" "$OUTPUT_PATH_VALUES_OVERRIDE/nidhogg.yaml" > "$OUTPUT_PATH_VALUES/nidhogg.yaml.tmp"
+        mv "$OUTPUT_PATH_VALUES/nidhogg.yaml"{.tmp,}
     fi
     ./scripts/prepare_master_config.sh $OUTPUT_PATH_CONF $VARIABLES
     ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_MASTER templates
     ./scripts/prepare_master_HA.sh $OUTPUT_DIR_MASTER templates
     ./scripts/prepare_k8s_configs.sh $OUTPUT_DIR_MASTER templates
     cp templates/boot.sh $OUTPUT_DIR_MASTER
-    sed -i $OUTPUT_DIR_MASTER/boot.sh \
-      -e "s/\$\$LB_IP_RANGE_START/$LB_IP_RANGE_START/g" \
-      -e "s/\$\$LB_IP_RANGE_STOP/$LB_IP_RANGE_STOP/g" \
-      -e "s/\$\$INGRESS_LB_IP_ADDRESS/$INGRESS_LB_IP_ADDRESS/g" \
-      -e "s/\$\$PROXY_EXTERNAL_PROXY/$PROXY_EXTERNAL_PROXY/g" \
-      -e "s#\$\$PROXY_SERVER#$PROXY_SERVER#g"
 done
 
 # Prepare the worker nodes
@@ -128,12 +133,6 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
         cp "$crio_sysconfig" "$OUTPUT_DIR_WORKER/etc/sysconfig/crio"
     fi
     cp templates/boot.sh $OUTPUT_DIR_WORKER
-    sed -i $OUTPUT_DIR_MASTER/boot.sh \
-      -e "s/\$\$LB_IP_RANGE_START/$LB_IP_RANGE_START/g" \
-      -e "s/\$\$LB_IP_RANGE_STOP/$LB_IP_RANGE_STOP/g"
-      -e "s/\$\$INGRESS_LB_IP_ADDRESS/$INGRESS_LB_IP_ADDRESS/g" \
-      -e "s/\$\$PROXY_EXTERNAL_PROXY/$PROXY_EXTERNAL_PROXY/g" \
-      -e "s#\$\$PROXY_SERVER#$PROXY_SERVER#g"
     ./scripts/prepare_node_config.sh $OUTPUT_DIR_WORKER/mukube_init_config $VARIABLES
     ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_WORKER templates
     ./scripts/prepare_k8s_configs.sh $OUTPUT_DIR_WORKER templates
