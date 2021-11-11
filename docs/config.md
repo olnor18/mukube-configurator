@@ -11,6 +11,7 @@ MASTER_CERTIFICATE_KEY=
 LB_IP_RANGE_START=
 LB_IP_RANGE_STOP=
 INGRESS_LB_IP_ADDRESS=
+PROXY_ENABLED=
 PROXY_SERVER=
 PROXY_EXTERNAL_PROXY=
 ```
@@ -51,11 +52,14 @@ Last IP address in the range to allocate for the load balancer.
 ### INGRESS_LB_IP_ADDRESS
 Load balancer IP to allocate for the ingress.
 
+### PROXY_ENABLED
+(Optional) Configure CRI-O and Argo to use the HTTP proxy set by `HTTP_PROXY_SERVER` (default: `false`).
+
 ### PROXY_SERVER
-HTTP proxy which CRI-O and Argo should use (default: `http://nidhogg-lb-proxy.yggdrasil.svc.cluster.local:80`).
+(Optional) HTTP proxy which CRI-O and Argo should use (default: `http://nidhogg-lb-proxy.yggdrasil.svc.cluster.local:80`).
 
 ### PROXY_EXTERNAL_PROXY
-External proxy server to pass to the internal TCP loadbalancer, which CRI-O and Argo use by default.
+(Required if `PROXY_ENABLED` is `true`) External proxy server to pass to the internal TCP loadbalancer, which CRI-O and Argo use by default.
 
 ### Example file
 ```

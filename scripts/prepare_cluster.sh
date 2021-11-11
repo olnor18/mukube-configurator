@@ -63,6 +63,7 @@ export MASTER_TAINT=$MASTER_TAINT
 export NODE_GATEWAY_IP=$NODE_GATEWAY_IP
 export CLUSTER_DNS=$CLUSTER_DNS
 export CLUSTER_NAME=$CLUSTER_NAME
+export PROXY_ENABLED="${PROXY_ENABLED:-false}"
 export PROXY_SERVER=${PROXY_SERVER:-http://nidhogg-lb-proxy.yggdrasil.svc.cluster.local:80}
 
 crio_sysconfig="$(mktemp)"
@@ -95,11 +96,11 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
     OUTPUT_PATH_VALUES="$OUTPUT_DIR_MASTER/root/helm-charts/values"
     mkdir -p "$OUTPUT_PATH_VALUES"
     eval "echo \"$(<templates/nidhogg-lb.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
-    if [ -n "$PROXY_EXTERNAL_PROXY" ]; then
+    if [ "$PROXY_ENABLED" = "true" ]; then
         mkdir -p "$OUTPUT_DIR_MASTER/etc/sysconfig"
         cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/sysconfig/crio"
+        eval "echo \"$(<templates/nidhogg-proxy.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
     fi
-    eval "echo \"$(<templates/nidhogg-proxy.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
     OUTPUT_PATH_VALUES_OVERRIDE="$OUTPUT_DIR/../root/helm-charts/values/"
     if [ -f "$OUTPUT_PATH_VALUES_OVERRIDE/nidhogg.yaml" ]; then
         # https://github.com/mikefarah/yq
@@ -128,7 +129,7 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
 
     mkdir -p $OUTPUT_DIR_WORKER/etc/containers/
     cp templates/registries.conf $OUTPUT_DIR_WORKER/etc/containers/
-    if [ -n "$PROXY_EXTERNAL_PROXY" ]; then
+    if [ "$PROXY_ENABLED" = "true" ]; then
         mkdir -p "$OUTPUT_DIR_WORKER/etc/sysconfig"
         cp "$crio_sysconfig" "$OUTPUT_DIR_WORKER/etc/sysconfig/crio"
     fi
