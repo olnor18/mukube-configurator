@@ -14,6 +14,7 @@ INGRESS_LB_IP_ADDRESS=
 PROXY_ENABLED=
 PROXY_SERVER=
 PROXY_EXTERNAL_PROXY=
+PROXY_CA_FILE=
 ```
 
 #### NODE_CONTROL_PLANE_VIP
@@ -60,6 +61,9 @@ Load balancer IP to allocate for the ingress.
 
 ### PROXY_EXTERNAL_PROXY
 (Required if `PROXY_ENABLED` is `true`) External proxy server to pass to the internal TCP loadbalancer, which CRI-O and Argo use by default.
+
+### PROXY_CA_FILE
+(Optional) Root certificate which CRI-O and Argo should trust when using the proxy.
 
 ### Example file
 ```

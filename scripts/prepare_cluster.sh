@@ -71,6 +71,9 @@ cat <<EOF > "$crio_sysconfig"
 http_proxy="$PROXY_SERVER"
 https_proxy="$PROXY_SERVER"
 EOF
+if [ -n "$PROXY_CA_FILE" ]; then
+    echo SSL_CERT_FILE=/etc/crio/ssl/root.pem >> "$crio_sysconfig"
+fi
 
 for ((i=0; i<${#MASTERS[@]}; i++)); do
     export NODE_NETWORK_INTERFACE=${INTERFACES[i]}
@@ -100,6 +103,11 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
         mkdir -p "$OUTPUT_DIR_MASTER/etc/sysconfig"
         cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/sysconfig/crio"
         eval "echo \"$(<templates/nidhogg-proxy.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
+        if [ -n "$PROXY_CA_FILE" ]; then
+            mkdir -p "$OUTPUT_DIR_MASTER/etc/crio/ssl/"
+            cp "$PROXY_CA_FILE" "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
+            cat templates/nidhogg-proxy-ca.yaml >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
+        fi
     fi
     OUTPUT_PATH_VALUES_OVERRIDE="$OUTPUT_DIR/../root/helm-charts/values/"
     if [ -f "$OUTPUT_PATH_VALUES_OVERRIDE/nidhogg.yaml" ]; then
@@ -132,6 +140,10 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
     if [ "$PROXY_ENABLED" = "true" ]; then
         mkdir -p "$OUTPUT_DIR_WORKER/etc/sysconfig"
         cp "$crio_sysconfig" "$OUTPUT_DIR_WORKER/etc/sysconfig/crio"
+        if [ -n "$PROXY_CA_FILE" ]; then
+            mkdir -p "$OUTPUT_DIR_WORKER/etc/crio/ssl/"
+            cp "$PROXY_CA_FILE" "$OUTPUT_DIR_WORKER/etc/crio/ssl/root.pem"
+        fi
     fi
     cp templates/boot.sh $OUTPUT_DIR_WORKER
     ./scripts/prepare_node_config.sh $OUTPUT_DIR_WORKER/mukube_init_config $VARIABLES
