@@ -63,6 +63,14 @@ export MASTER_TAINT=$MASTER_TAINT
 export NODE_GATEWAY_IP=$NODE_GATEWAY_IP
 export CLUSTER_DNS=$CLUSTER_DNS
 export CLUSTER_NAME=$CLUSTER_NAME
+export PROXY_ENABLED="${PROXY_ENABLED:-false}"
+export PROXY_SERVER=${PROXY_SERVER:-http://nidhogg-lb-proxy.yggdrasil.svc.cluster.local:80}
+
+crio_sysconfig="$(mktemp)"
+cat <<EOF > "$crio_sysconfig"
+http_proxy="$PROXY_SERVER"
+https_proxy="$PROXY_SERVER"
+EOF
 
 for ((i=0; i<${#MASTERS[@]}; i++)); do
     export NODE_NETWORK_INTERFACE=${INTERFACES[i]}
@@ -85,15 +93,26 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
 
     mkdir -p $OUTPUT_DIR_MASTER/etc/containers/
     cp templates/registries.conf $OUTPUT_DIR_MASTER/etc/containers/
+    OUTPUT_PATH_VALUES="$OUTPUT_DIR_MASTER/root/helm-charts/values"
+    mkdir -p "$OUTPUT_PATH_VALUES"
+    eval "echo \"$(<templates/nidhogg-lb.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
+    if [ "$PROXY_ENABLED" = "true" ]; then
+        mkdir -p "$OUTPUT_DIR_MASTER/etc/sysconfig"
+        cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/sysconfig/crio"
+        eval "echo \"$(<templates/nidhogg-proxy.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
+    fi
+    OUTPUT_PATH_VALUES_OVERRIDE="$OUTPUT_DIR/../root/helm-charts/values/"
+    if [ -f "$OUTPUT_PATH_VALUES_OVERRIDE/nidhogg.yaml" ]; then
+        # https://github.com/mikefarah/yq
+        # https://mikefarah.gitbook.io/yq/v/v4.x/operators/reduce#merge-all-yaml-files-together
+        yq eval-all '. as $item ireduce ({}; . * $item )' "$OUTPUT_PATH_VALUES/nidhogg.yaml" "$OUTPUT_PATH_VALUES_OVERRIDE/nidhogg.yaml" > "$OUTPUT_PATH_VALUES/nidhogg.yaml.tmp"
+        mv "$OUTPUT_PATH_VALUES/nidhogg.yaml"{.tmp,}
+    fi
     ./scripts/prepare_master_config.sh $OUTPUT_PATH_CONF $VARIABLES
     ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_MASTER templates
     ./scripts/prepare_master_HA.sh $OUTPUT_DIR_MASTER templates
     ./scripts/prepare_k8s_configs.sh $OUTPUT_DIR_MASTER templates
     cp templates/boot.sh $OUTPUT_DIR_MASTER
-    sed -i $OUTPUT_DIR_MASTER/boot.sh \
-      -e "s/\$\$LB_IP_RANGE_START/$LB_IP_RANGE_START/g" \
-      -e "s/\$\$LB_IP_RANGE_STOP/$LB_IP_RANGE_STOP/g" \
-      -e "s/\$\$INGRESS_LB_IP_ADDRESS/$INGRESS_LB_IP_ADDRESS/g"
 done
 
 # Prepare the worker nodes
@@ -110,12 +129,14 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
 
     mkdir -p $OUTPUT_DIR_WORKER/etc/containers/
     cp templates/registries.conf $OUTPUT_DIR_WORKER/etc/containers/
+    if [ "$PROXY_ENABLED" = "true" ]; then
+        mkdir -p "$OUTPUT_DIR_WORKER/etc/sysconfig"
+        cp "$crio_sysconfig" "$OUTPUT_DIR_WORKER/etc/sysconfig/crio"
+    fi
     cp templates/boot.sh $OUTPUT_DIR_WORKER
-    sed -i $OUTPUT_DIR_MASTER/boot.sh \
-      -e "s/\$\$LB_IP_RANGE_START/$LB_IP_RANGE_START/g" \
-      -e "s/\$\$LB_IP_RANGE_STOP/$LB_IP_RANGE_STOP/g"
-      -e "s/\$\$INGRESS_LB_IP_ADDRESS/$INGRESS_LB_IP_ADDRESS/g"
     ./scripts/prepare_node_config.sh $OUTPUT_DIR_WORKER/mukube_init_config $VARIABLES
     ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_WORKER templates
     ./scripts/prepare_k8s_configs.sh $OUTPUT_DIR_WORKER templates
 done
+
+rm "$crio_sysconfig"
