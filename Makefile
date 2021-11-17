@@ -21,7 +21,7 @@ url = $(shell echo $1 | cut -d % -f 3- )
 HELM_CHARTS += $(HELM_DIR)/$$(release)\#$$(namespace)\#$$(notdir $$(url))
 $(HELM_DIR)/$$(release)\#$$(namespace)\#$$(notdir $$(url)) : $(HELM_DIR)/.empty
 	curl -L $$(url) -o $$@ 
-	[ -f "config/values/$$(release).yaml" ] && cp "config/values/$$(release).yaml" "$(HELM_DIR)/values/"
+	[ -f "config/values/$$(release).yaml" ] && cp "config/values/$$(release).yaml" "$(HELM_DIR)/values/" || true
 endef
 $(foreach L,$(shell cat $(HELM_REQUIREMENTS)),$(eval $(call DOWNLOAD_HELM_PACKAGE,$L))) 
 
