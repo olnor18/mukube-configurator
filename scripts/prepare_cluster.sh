@@ -106,6 +106,7 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
         if [ -n "$PROXY_CA_FILE" ]; then
             mkdir -p "$OUTPUT_DIR_MASTER/etc/crio/ssl/"
             cp "$PROXY_CA_FILE" "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
+            chmod 444 "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
             cat templates/nidhogg-proxy-ca.yaml >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
         fi
     fi
@@ -143,6 +144,7 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
         if [ -n "$PROXY_CA_FILE" ]; then
             mkdir -p "$OUTPUT_DIR_WORKER/etc/crio/ssl/"
             cp "$PROXY_CA_FILE" "$OUTPUT_DIR_WORKER/etc/crio/ssl/root.pem"
+            chmod 444 "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
         fi
     fi
     cp templates/boot.sh $OUTPUT_DIR_WORKER
