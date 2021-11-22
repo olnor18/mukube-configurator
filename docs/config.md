@@ -32,6 +32,9 @@ The names of the network interfaces where the devices are discoverable.
 #### MASTER_VIP_CLUSTER_IPS
 A comma separated list of ips of all the master nodes.
 
+### MASTER_VIP_CLUSTER_CIDR
+Network subnet.
+
 ### WORKER_IPS 
 A comma separated list of ips of all the worker nodes.
 
@@ -72,6 +75,7 @@ NODE_CONTROL_PLANE_PORT=4200
 MASTER_TAINT=false
 NODE_NETWORK_INTERFACES=eth0,eth0,eth0,ensp4,eth1
 MASTER_VIP_CLUSTER_IPS=192.168.1.100,192.168.1.101,192.168.1.102,
+MASTER_VIP_CLUSTER=24
 WORKER_IPS=192.168.1.110,192.168.1.111
 NODE_GATEWAY_IP=192.168.1.1
 LB_RANGE_START=192.168.1.20

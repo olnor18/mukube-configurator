@@ -63,6 +63,7 @@ export MASTER_TAINT=$MASTER_TAINT
 export NODE_GATEWAY_IP=$NODE_GATEWAY_IP
 export CLUSTER_DNS=$CLUSTER_DNS
 export CLUSTER_NAME=$CLUSTER_NAME
+export MASTER_VIP_CLUSTER_CIDR
 export PROXY_ENABLED="${PROXY_ENABLED:-false}"
 export PROXY_SERVER=${PROXY_SERVER:-http://nidhogg-lb-proxy.yggdrasil.svc.cluster.local:80}
 

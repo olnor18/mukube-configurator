@@ -25,6 +25,7 @@ case $NODE_TYPE in
         echo "CREATING CLUSTER"
         echo "Bootstrapping virtual ip setup"
         mkdir -p /etc/kubernetes/manifests
+        sed "s/\$\$NODE_NETWORK_INTERFACE/$(basename /sys/class/net/$NODE_NETWORK_INTERFACE)/" -i /etc/keepalived/keepalived.conf
         mv /root/ha/* /etc/kubernetes/manifests
         init="kubeadm init --v=5 --config /etc/kubernetes/InitConfiguration.yaml --upload-certs" 
         printf "Creating cluster with command: \n\n\t $init \n\n"
@@ -57,6 +58,7 @@ case $NODE_TYPE in
         ;;&
     master-join)
         echo "Joining virtual ip setup"
+        sed "s/\$\$NODE_NETWORK_INTERFACE/$(basename /sys/class/net/$NODE_NETWORK_INTERFACE)/" -i /etc/keepalived/keepalived.conf
         mv /root/ha/* /etc/kubernetes/manifests
         ;;&
     master*)
