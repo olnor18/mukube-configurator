@@ -15,6 +15,8 @@ PROXY_ENABLED=
 PROXY_SERVER=
 PROXY_EXTERNAL_PROXY=
 PROXY_CA_FILE=
+KUBECONFIG_HOST=
+KUBECONFIG_SSH_KEY=
 ```
 
 #### NODE_CONTROL_PLANE_VIP
@@ -67,6 +69,12 @@ Load balancer IP to allocate for the ingress.
 
 ### PROXY_CA_FILE
 (Optional) Root certificate which CRI-O and Argo should trust when using the proxy.
+
+### KUBECONFIG_HOST
+(Optional) Host to transfer a `kubeconfig` file, with read only access to the cluster, to.
+
+### KUBECONFIG_SSH_KEY
+(Optional) SSH key to use for the transfer.
 
 ### Example file
 ```

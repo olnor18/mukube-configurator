@@ -66,6 +66,8 @@ export CLUSTER_NAME=$CLUSTER_NAME
 export MASTER_VIP_CLUSTER_CIDR
 export PROXY_ENABLED="${PROXY_ENABLED:-false}"
 export PROXY_SERVER=${PROXY_SERVER:-http://nidhogg-lb-proxy.yggdrasil.svc.cluster.local:80}
+export KUBECONFIG_HOST
+export KUBECONFIG_SSH_KEY
 
 crio_sysconfig="$(mktemp)"
 cat <<EOF > "$crio_sysconfig"
@@ -123,6 +125,13 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
     ./scripts/prepare_master_HA.sh $OUTPUT_DIR_MASTER templates
     ./scripts/prepare_k8s_configs.sh $OUTPUT_DIR_MASTER templates
     cp templates/boot.sh $OUTPUT_DIR_MASTER
+    if [ -n "$KUBECONFIG_HOST" ]; then
+        mkdir $OUTPUT_DIR_MASTER/root/k8s/ $OUTPUT_DIR_MASTER/root/.ssh
+        cp templates/readonly.yaml $OUTPUT_DIR_MASTER/root/k8s/
+        cp "$KUBECONFIG_SSH_KEY" $OUTPUT_DIR_MASTER/root/.ssh/kubeconfig-key.pub
+        chmod 600 $OUTPUT_DIR_MASTER/root/.ssh/kubeconfig-key.pub
+        sed -e "s/\$\$KUBECONFIG_HOST/$KUBECONFIG_HOST/" -i $OUTPUT_DIR_MASTER/boot.sh
+    fi
 done
 
 # Prepare the worker nodes
