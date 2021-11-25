@@ -30,6 +30,16 @@ case $NODE_TYPE in
         init="kubeadm init --v=5 --config /etc/kubernetes/InitConfiguration.yaml --upload-certs" 
         printf "Creating cluster with command: \n\n\t $init \n\n"
         $init
+
+        if [ -d /root/k8s ] && [ -n "$(ls -A /root/k8s)" ]; then
+            until KUBECONFIG=/etc/kubernetes/admin.conf kubectl apply -f /root/k8s/; do
+                sleep 1
+            done
+            kubeconfig="/tmp/admin-ro-$(date +%s).conf"
+            kubeadm alpha kubeconfig user --client-name admin-ro --config /etc/kubernetes/InitConfiguration.yaml | grep -v "WARNING: port specified in controlPlaneEndpoint overrides" > "$kubeconfig"
+            sftp -i /root/.ssh/kubeconfig-key.pub -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$$KUBECONFIG_HOST" <<< "put \"$kubeconfig\""
+            rm "$kubeconfig"
+        fi
         ;;&
     master-join | worker)
         echo "JOINING CLUSTER"
