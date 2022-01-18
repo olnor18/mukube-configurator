@@ -22,6 +22,9 @@ case $NODE_TYPE in
 			$(<$TEMPLATES_DIR/InitConfiguration.yaml )
 			---
 			$(<$TEMPLATES_DIR/ClusterConfiguration.yaml )
+			---
+			$(<$TEMPLATES_DIR/KubeletConfiguration.yaml )
+			---
 		EOF
 		" > $OUTPUT_DIR/InitConfiguration.yaml
 	;;
