@@ -35,12 +35,6 @@ then
     exit 1
 fi
 
-if [ -z $CLUSTER_NAME ]
-then
-    echo "[INFO] CLUSTER_NAME not set. Using default: test"
-    CLUSTER_NAME="test"
-fi
-
 # MAKE HOST_IP list
 IFS=, read -ra MASTERS <<< "$MASTER_VIP_CLUSTER_IPS"
 IFS=, read -ra WORKERS <<< "$WORKER_IPS"
@@ -63,7 +57,7 @@ export MASTER_TAINT=$MASTER_TAINT
 export NODE_GATEWAY_IP=$NODE_GATEWAY_IP
 export NODE_CONTROL_PLANE_PORT="${NODE_CONTROL_PLANE_PORT:-4200}"
 export CLUSTER_DNS=$CLUSTER_DNS
-export CLUSTER_NAME=$CLUSTER_NAME
+export CLUSTER_NAME="${CLUSTER_NAME:-default}"
 export MASTER_VIP_CLUSTER_CIDR
 export PROXY_ENABLED="${PROXY_ENABLED:-false}"
 export PROXY_SERVER=${PROXY_SERVER:-http://nidhogg-lb-proxy.yggdrasil.svc.cluster.local:80}
