@@ -2,7 +2,7 @@ HELM_REQUIREMENTS ?= config/helm_requirements
 CONFIG ?= config/config
 
 
-default: $(CONFIG) docker-kubeadm pack-helm-charts
+default: $(CONFIG) pack-helm-charts
 	./scripts/prepare_cluster.sh build/nodes $(CONFIG)
 	./scripts/build_cluster.sh build/nodes
 
@@ -28,11 +28,6 @@ $(foreach L,$(shell cat $(HELM_REQUIREMENTS)),$(eval $(call DOWNLOAD_HELM_PACKAG
 pack-helm-charts : $(HELM_DIR)/.empty $(HELM_CHARTS)
 $(HELM_DIR)/.empty :
 	mkdir -p $(@D) $(@D)/values && touch $@
-
-## docker-kubeadm: build the kubeadocker image used to generate join_tokens and certificates
-.PHONY : docker-kubeadm
-docker-kubeadm:
-	docker build -t kubeadocker - < Dockerfile
 
 ## clean: remove output from the build
 clean:
