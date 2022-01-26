@@ -29,7 +29,7 @@ The ip address of the control plane. If the first master node is being configure
 Either true or false. If this master node should be tainted, meaning that no pods other than the static pods, will be scheduled to run here. Defaluts to true.
 
 #### NODE_NETWORK_INTERFACES
-The names of the network interfaces where the devices are discoverable.
+(Optional) The names of the network interfaces where the devices are discoverable (default: `en*`).
 
 #### MASTER_VIP_CLUSTER_IPS
 A comma separated list of ips of all the master nodes.

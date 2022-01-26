@@ -17,12 +17,6 @@ then
     NODE_JOIN_TOKEN=$(docker run kubeadocker token generate)
 fi
 
-if [ -z "$NODE_NETWORK_INTERFACES" ]
-then
-    echo "[error] NODE_NETWORK_INTERFACES required"
-    exit 1
-fi
-
 if [ -z "$MASTER_VIP_CLUSTER_IPS" ]
 then
     echo "[error] MASTER_VIP_CLUSTER_IPS required"
@@ -43,7 +37,7 @@ IFS=, read -ra INTERFACES <<< "$NODE_NETWORK_INTERFACES"
 total_nodes=$(expr ${#MASTERS[@]} + ${#WORKERS[@]})
 total_interfaces=${#INTERFACES[@]}
 
-if [ $total_nodes -ne $total_interfaces ]
+if [ -n "$NODE_NETWORK_INTERFACES" ] && [ $total_nodes -ne $total_interfaces ]
 then
     echo "[ERROR] Number of interfaces specified is not equal to the total number of masters and workers"
     exit 1
@@ -74,7 +68,7 @@ if [ -n "$PROXY_CA_FILE" ]; then
 fi
 
 for ((i=0; i<${#MASTERS[@]}; i++)); do
-    export NODE_NETWORK_INTERFACE=${INTERFACES[i]}
+    export NODE_NETWORK_INTERFACE=${INTERFACES[i]:-en*}
     export NODE_HOST_IP=${MASTERS[i]}
     export NODE_NAME=master$i
     export MASTER_PROXY_PRIORITY=$(expr 100 - $i)
@@ -134,7 +128,7 @@ export NODE_TYPE=worker
 for ((i=0; i<${#WORKERS[@]}; i++)); do
     number_of_masters=${#MASTERS[@]}
     interface_index=$(expr $i + $number_of_masters)
-    export NODE_NETWORK_INTERFACE=${INTERFACES[interface_index]}
+    export NODE_NETWORK_INTERFACE=${INTERFACES[interface_index]:-en*}
     export NODE_HOST_IP=${WORKERS[i]}
     export NODE_NAME=worker$i
 
