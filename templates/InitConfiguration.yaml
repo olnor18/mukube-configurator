@@ -1,5 +1,4 @@
-# SET CONTROL PLANE IP AND PORT
-apiVersion: kubeadm.k8s.io/v1beta2
+apiVersion: kubeadm.k8s.io/v1beta3
 bootstrapTokens:
 - groups:
   - system:bootstrappers:kubeadm:default-node-token
@@ -16,7 +15,4 @@ certificateKey: ${MASTER_CERTIFICATE_KEY}
 nodeRegistration:
   name: ${NODE_NAME}
   criSocket: unix:///var/run/crio/crio.sock
-  kubeletExtraArgs:
-    cgroup-driver: "systemd"
-    resolv-conf: /etc/resolv.conf.kubelet
   ${TAINT_MASTER_YAML}
