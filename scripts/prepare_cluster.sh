@@ -63,6 +63,16 @@ cat <<EOF > "$crio_sysconfig"
 http_proxy="$PROXY_SERVER"
 https_proxy="$PROXY_SERVER"
 EOF
+
+mirrors_conf="$(mktemp)"
+while IFS= read -r line; do
+  registry="$(awk '{print $1}' <<< "$line")"
+  mirror="$(awk '{print $2}' <<< "$line")"
+  insecure="$(awk '{print $3}' <<< "$line")"
+  # https://github.com/containers/image/blob/70982d037a7a006fd3806dfb0882840aac2e2259/docs/containers-registries.conf.5.md
+  printf '[[registry]]\nlocation = "%s"\n[[registry.mirror]]\nlocation = "%s"\ninsecure = %s\n\n' "$registry" "$mirror" "$insecure" >> "$mirrors_conf"
+done < <(tr ',' '\n' <<< "$REGISTRY_MIRRORS" | sed '/^[[:space:]]*$/d')
+
 if [ -n "$PROXY_CA_FILE" ]; then
     echo SSL_CERT_FILE=/etc/crio/ssl/root.pem >> "$crio_sysconfig"
 fi
@@ -86,8 +96,9 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
     OUTPUT_PATH_CONF=$OUTPUT_DIR_MASTER/mukube_init_config
     mkdir -p $OUTPUT_DIR_MASTER
 
-    mkdir -p $OUTPUT_DIR_MASTER/etc/containers/
+    mkdir -p $OUTPUT_DIR_MASTER/etc/containers/registries.conf.d/
     cp templates/registries.conf $OUTPUT_DIR_MASTER/etc/containers/
+    cp "$mirrors_conf" $OUTPUT_DIR_MASTER/etc/containers/registries.conf.d/mirrors.conf
     OUTPUT_PATH_VALUES="$OUTPUT_DIR_MASTER/root/helm-charts/values"
     mkdir -p "$OUTPUT_PATH_VALUES"
     eval "echo \"$(<templates/nidhogg-lb.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
@@ -135,8 +146,9 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
     OUTPUT_DIR_WORKER=$OUTPUT_DIR/$CLUSTER_NAME-worker$i
     mkdir -p $OUTPUT_DIR_WORKER
 
-    mkdir -p $OUTPUT_DIR_WORKER/etc/containers/
+    mkdir -p $OUTPUT_DIR_WORKER/etc/containers/registries.conf.d/
     cp templates/registries.conf $OUTPUT_DIR_WORKER/etc/containers/
+    cp "$mirrors_conf" $OUTPUT_DIR_WORKER/etc/containers/registries.conf.d/mirrors.conf
     if [ "$PROXY_ENABLED" = "true" ]; then
         mkdir -p "$OUTPUT_DIR_WORKER/etc/sysconfig"
         cp "$crio_sysconfig" "$OUTPUT_DIR_WORKER/etc/sysconfig/crio"
@@ -152,4 +164,4 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
     ./scripts/prepare_k8s_configs.sh $OUTPUT_DIR_WORKER templates
 done
 
-rm "$crio_sysconfig"
+rm "$crio_sysconfig" "$mirrors_conf"
