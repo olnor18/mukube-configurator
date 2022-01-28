@@ -23,13 +23,13 @@ KUBECONFIG_SSH_KEY=
 The ip address of the control plane. If the first master node is being configured, this virtual ip will be created. 
 
 #### NODE_CONTROL_PLANE_PORT
-The port where the control plane should listens on.
+(Optional) The port where the control plane should listens on (default: `4200`).
 
 #### MASTER_TAINT
 Either true or false. If this master node should be tainted, meaning that no pods other than the static pods, will be scheduled to run here. Defaluts to true.
 
 #### NODE_NETWORK_INTERFACES
-The names of the network interfaces where the devices are discoverable.
+(Optional) The names of the network interfaces where the devices are discoverable (default: `en*`).
 
 #### MASTER_VIP_CLUSTER_IPS
 A comma separated list of ips of all the master nodes.

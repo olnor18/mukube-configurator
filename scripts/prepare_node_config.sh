@@ -8,12 +8,6 @@ then
     exit 1
 fi
 
-if [ -z "$NODE_CONTROL_PLANE_PORT" ]
-then
-    echo "[error] NODE_CONTROL_PLANE_PORT required"
-    exit 1
-fi
-
 if [ -z $NODE_JOIN_TOKEN ]
 then
     echo "[error] NODE_JOIN_TOKEN required."
