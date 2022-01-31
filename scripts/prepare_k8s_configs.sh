@@ -12,9 +12,7 @@ case $NODE_TYPE in
 	master*)
 		if [ $MASTER_TAINT == "true" ]
 		then 
-			export TAINT_MASTER_YAML=$'taints:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/master'
-		else
-			export TAINT_MASTER_YAML="taints: []"
+			export TAINT_MASTER_YAML=$'- effect: NoSchedule\n      key: node-role.kubernetes.io/master'
 		fi
 	;;&
 	master-init)

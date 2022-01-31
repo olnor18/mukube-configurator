@@ -11,5 +11,9 @@ nodeRegistration:
   kubeletExtraArgs:
     cgroup-driver: "systemd"
   criSocket: unix:///var/run/crio/crio.sock
-  ${TAINT_MASTER_YAML}
+  taints:
+    - key: "node.cilium.io/agent-not-ready"
+      value: "true"
+      effect: "NoSchedule"
+    ${TAINT_MASTER_YAML}
 ${CONTROL_PLANE_REGISTRATION}
