@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 OUTPUT_DIR=$1
 VARIABLES=$2
 source $VARIABLES
