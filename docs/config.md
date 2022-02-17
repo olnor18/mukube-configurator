@@ -1,4 +1,4 @@
-Configuration for what is needed to set up a HA that is part of a highly available control plane. Placed in the `config` file in the root of the project.
+Configuration for what is needed to set up a HA that is part of a highly available control plane. Placed in the `config` file in the input directory.
 ```
 NODE_CONTROL_PLANE_VIP=
 NODE_CONTROL_PLANE_PORT=

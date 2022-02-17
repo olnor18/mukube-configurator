@@ -1,5 +1,4 @@
 artifacts/*
 build/*
 
-config/*
-helm_charts/*
+input/*
