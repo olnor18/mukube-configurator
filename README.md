@@ -16,10 +16,6 @@ All helm charts repos listed in this file will be downloaded and packed into the
 Values to use for the helm release.
 
 ### Dependencies
-A user in the docker group
-Use this command to add the current user to docker and reboot.
-`sudo usermod -aG docker $USER`
-
 `e2fsprogs` is required for creating the ext4 filesystem.
 
 `yq` is required for parsing YAML. 

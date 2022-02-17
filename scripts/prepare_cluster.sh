@@ -8,14 +8,16 @@ source $VARIABLES
 if [ -z $MASTER_CERTIFICATE_KEY ]
 then
     echo "[info] MASTER_CERTIFICATE_KEY not set. Generating new."
-    MASTER_CERTIFICATE_KEY=$(docker run kubeadocker alpha certs certificate-key)
+    # https://github.com/kubernetes/kubernetes/blob/cde45fb161c5a4bfa7cfe45dfd814f6cc95433f7/cmd/kubeadm/app/phases/copycerts/copycerts.go#L80-L87
+    MASTER_CERTIFICATE_KEY=$(hexdump -e '"%x"' /dev/random | head -c64)
 fi
 
 #TODO validate with regexp
 if [ -z $NODE_JOIN_TOKEN ]
 then
     echo "[info] NODE_JOIN_TOKEN not set. Generating new. "
-    NODE_JOIN_TOKEN=$(docker run kubeadocker token generate)
+    # https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-token/#synopsis
+    NODE_JOIN_TOKEN=$(tr -dc 'a-z0-9' < /dev/random | head -c 23 | sed s/././7)
 fi
 
 if [ -z "$MASTER_VIP_CLUSTER_IPS" ]
