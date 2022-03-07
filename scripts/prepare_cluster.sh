@@ -105,6 +105,9 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
     OUTPUT_PATH_VALUES="$OUTPUT_DIR_MASTER/root/helm-charts/values"
     mkdir -p "$OUTPUT_PATH_VALUES"
     eval "echo \"$(<templates/nidhogg-lb.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
+    if [ "$EXTERNAL_DNS_ENABLED" = "true" ]; then
+        eval "echo \"$(<templates/nidhogg-external-dns.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
+    fi
     if [ "$PROXY_ENABLED" = "true" ]; then
         mkdir -p "$OUTPUT_DIR_MASTER/etc/sysconfig"
         cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/sysconfig/crio"

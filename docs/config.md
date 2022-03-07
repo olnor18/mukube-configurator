@@ -18,6 +18,10 @@ PROXY_CA_FILE=
 KUBECONFIG_HOST=
 KUBECONFIG_SSH_KEY=
 REGISTRY_MIRRORS=
+EXTERNAL_DNS_ENABLED=
+EXTERNAL_DNS_ZONE=
+EXTERNAL_DNS_PDNS_SERVER=
+EXTERNAL_DNS_PDNS_API_KEY=
 ```
 
 #### NODE_CONTROL_PLANE_VIP
@@ -79,6 +83,18 @@ Load balancer IP to allocate for the ingress.
 
 ### REGISTRY_MIRRORS
 (Optional) List of mirrors to configure in [`registries.conf.d`](https://github.com/containers/image/blob/70982d037a7a006fd3806dfb0882840aac2e2259/docs/containers-registries.conf.d.5.md), ex: `docker.io 192.168.1.10:5000 true,quay.io 192.168.1.20:5000 true` (`$registry $mirror $insecure`).
+
+### EXTERNAL_DNS_ENABLED
+(Optional) Configure [external-dns](https://github.com/kubernetes-sigs/external-dns) (default: `false`).
+
+### EXTERNAL_DNS_ZONE
+(Required if `EXTERNAL_DNS_ENABLED` is `true`) DNS zone to put records into.
+
+### EXTERNAL_DNS_PDNS_SERVER
+(Required if `EXTERNAL_DNS_ENABLED` is `true`) PowerDNS HTTP API URL.
+
+### EXTERNAL_DNS_PDNS_API_KEY
+(Required if `EXTERNAL_DNS_ENABLED` is `true`) PowerDNS API key.
 
 ### Example file
 ```

@@ -1,0 +1,11 @@
+  external-dns:
+    env:
+      - name: EXTERNAL_DNS_PDNS_SERVER
+        value: '$EXTERNAL_DNS_PDNS_SERVER'
+      - name: EXTERNAL_DNS_PDNS_API_KEY
+        value: '$EXTERNAL_DNS_PDNS_API_KEY'
+      - name: EXTERNAL_DNS_FQDN_TEMPLATE
+        value: '{{.Name}}.$EXTERNAL_DNS_ZONE'
+    policy: sync
+    domainFilters: [$EXTERNAL_DNS_ZONE]
+    provider: pdns
