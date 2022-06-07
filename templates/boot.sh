@@ -1,6 +1,4 @@
 #!/bin/bash
-shopt -s extglob
-
 # Load all the variables from the config.yaml file to variables
 source mukube_init_config
 
@@ -55,15 +53,11 @@ case $NODE_TYPE in
         # Need to export KUBECONFIG for helm to contact the api-server
         export KUBECONFIG=/etc/kubernetes/admin.conf
         echo "Installing included helm charts"
-        for FILE in /root/helm-charts/!(values); do
-            release=$(echo $FILE | cut -f4 -d/ | cut -f1 -d#)
-            namespace=$(echo $FILE | cut -f4 -d/ | cut -f2 -d#)
-            values_file="/root/helm-charts/values/$release.yaml"
-            if [ -f "$values_file" ]; then
-                helm install --create-namespace -f "$values_file" -n $namespace $release $FILE
-            else
-                helm install --create-namespace -n $namespace $release $FILE
-            fi
+        kubectl apply -f /root/crds.yaml
+        for FILE in /root/manifest-*.yaml; do
+            NAMESPACE="$(cut -f2- -d - <<< "$FILE" | cut -f1 -d .)"
+            kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+            kubectl apply -n "$NAMESPACE" -f "$FILE"
         done
         ;;&
     master-join)

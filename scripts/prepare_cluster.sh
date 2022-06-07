@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+shopt -s extglob
 OUTPUT_DIR=$1
 VARIABLES=$2
 source $VARIABLES
@@ -86,6 +87,7 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
     export NODE_NAME=master$i
     export MASTER_PROXY_PRIORITY=$(expr 100 - $i)
     OUTPUT_DIR_MASTER=$OUTPUT_DIR/$CLUSTER_NAME-master$i
+    mkdir -p $OUTPUT_DIR_MASTER
 
     if [ $i = 0 ];
     then
@@ -97,35 +99,53 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
     fi
 
     OUTPUT_PATH_CONF=$OUTPUT_DIR_MASTER/mukube_init_config
-    mkdir -p $OUTPUT_DIR_MASTER
 
     mkdir -p $OUTPUT_DIR_MASTER/etc/containers/registries.conf.d/
     cp templates/registries.conf $OUTPUT_DIR_MASTER/etc/containers/
     cp "$mirrors_conf" $OUTPUT_DIR_MASTER/etc/containers/registries.conf.d/mirrors.conf
-    OUTPUT_PATH_VALUES="$OUTPUT_DIR_MASTER/root/helm-charts/values"
-    mkdir -p "$OUTPUT_PATH_VALUES"
-    eval "echo \"$(<templates/nidhogg-lb.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
-    if [ "$EXTERNAL_DNS_ENABLED" = "true" ]; then
-        eval "echo \"$(<templates/nidhogg-external-dns.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
-    fi
-    if [ "$PROXY_ENABLED" = "true" ]; then
-        mkdir -p "$OUTPUT_DIR_MASTER/etc/sysconfig"
-        cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/sysconfig/crio"
-        eval "echo \"$(<templates/nidhogg-proxy.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
-        if [ -n "$PROXY_CA_FILE" ]; then
-            mkdir -p "$OUTPUT_DIR_MASTER/etc/crio/ssl/"
-            cp "$PROXY_CA_FILE" "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
-            chmod 444 "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
-            cat templates/nidhogg-proxy-ca.yaml >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
+
+    if [ $i = 0 ]; then
+        OUTPUT_PATH_VALUES="$(mktemp -d)"
+        trap "rm -r \"$OUTPUT_PATH_VALUES\"" EXIT
+        mkdir -p "$OUTPUT_PATH_VALUES"
+        eval "echo \"$(<templates/nidhogg-lb.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
+        if [ "$EXTERNAL_DNS_ENABLED" = "true" ]; then
+            eval "echo \"$(<templates/nidhogg-external-dns.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
         fi
-    fi
-    OUTPUT_PATH_VALUES_OVERRIDE="$OUTPUT_DIR/../root/helm-charts/values/"
-    if [ -f "$OUTPUT_PATH_VALUES_OVERRIDE/nidhogg.yaml" ]; then
-        # https://github.com/mikefarah/yq
-        # https://mikefarah.gitbook.io/yq/v/v4.x/operators/reduce#merge-all-yaml-files-together
-        yq eval-all '. as $item ireduce ({}; . * $item )' "$OUTPUT_PATH_VALUES/nidhogg.yaml" "$OUTPUT_PATH_VALUES_OVERRIDE/nidhogg.yaml" > "$OUTPUT_PATH_VALUES/nidhogg.yaml.tmp"
-        mv "$OUTPUT_PATH_VALUES/nidhogg.yaml"{.tmp,}
-    fi
+        if [ "$PROXY_ENABLED" = "true" ]; then
+            mkdir -p "$OUTPUT_DIR_MASTER/etc/sysconfig"
+            cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/sysconfig/crio"
+            eval "echo \"$(<templates/nidhogg-proxy.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
+            if [ -n "$PROXY_CA_FILE" ]; then
+                mkdir -p "$OUTPUT_DIR_MASTER/etc/crio/ssl/"
+                cp "$PROXY_CA_FILE" "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
+                chmod 444 "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
+                cat templates/nidhogg-proxy-ca.yaml >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
+            fi
+        fi
+        OUTPUT_PATH_VALUES_OVERRIDE="$OUTPUT_DIR/../root/helm-charts/values/"
+        if [ -f "$OUTPUT_PATH_VALUES_OVERRIDE/nidhogg.yaml" ]; then
+            # https://github.com/mikefarah/yq
+            # https://mikefarah.gitbook.io/yq/v/v4.x/operators/reduce#merge-all-yaml-files-together
+            yq eval-all '. as $item ireduce ({}; . * $item )' "$OUTPUT_PATH_VALUES/nidhogg.yaml" "$OUTPUT_PATH_VALUES_OVERRIDE/nidhogg.yaml" > "$OUTPUT_PATH_VALUES/nidhogg.yaml.tmp"
+            mv "$OUTPUT_PATH_VALUES/nidhogg.yaml"{.tmp,}
+        fi
+
+        rm -f "$OUTPUT_DIR_MASTER/root/crds.yaml"
+        for FILE in build/root/helm-charts/!(values); do
+            release=$(echo $FILE | cut -f4 -d/ | cut -f1 -d#)
+            namespace=$(echo $FILE | cut -f4 -d/ | cut -f2 -d#)
+            values_file="$OUTPUT_PATH_VALUES/nidhogg.yaml"
+            mkdir -p "$OUTPUT_DIR_MASTER/root"
+            if [ -f "$values_file" ]; then
+                helm template --skip-tests --include-crds -f "$values_file" -n $namespace $release $FILE > "$OUTPUT_DIR_MASTER/root/manifest-$namespace.yaml"
+            else
+                helm template --skip-tests --include-crds -n $namespace $release $FILE > "$OUTPUT_DIR_MASTER/root/manifest-$namespace.yaml"
+            fi
+            yq e 'select(.kind == "CustomResourceDefinition")' "$OUTPUT_DIR_MASTER/root/manifest-$namespace.yaml" >> "$OUTPUT_DIR_MASTER/root/crds.yaml"
+        done
+     fi
+
     ./scripts/prepare_master_config.sh $OUTPUT_PATH_CONF $VARIABLES
     ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_MASTER templates
     ./scripts/prepare_master_HA.sh $OUTPUT_DIR_MASTER templates
