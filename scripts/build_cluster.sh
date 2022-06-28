@@ -11,11 +11,6 @@ for node in $NODEDIR/*; do
 	echo "[INFO] Archiving $node --> $archive_path"
 	tar -cf $archive_path -C $node .
 
-	#Pack the images and helm charts for master nodes
-	if [[ $node == *"master"* ]]; then
-		echo "	* adding helm-charts"
-		tar -rf $archive_path -C build root/helm-charts --exclude **/.empty --exclude root/helm-charts/values/nidhogg.yaml
-	fi
 	tmp="$(mktemp -d)"
 	cp "$archive_path" "$tmp/config.tar"
 	mkfs.ext4 -L config -d "$tmp" "${archive_path%%.tar}.ext4" 1M

@@ -3,7 +3,7 @@ imageRepository: k8s.gcr.io
 kind: ClusterConfiguration
 clusterName: kubernetes
 certificatesDir: /etc/kubernetes/pki
-kubernetesVersion: v1.22.1 # TODO inject version
+kubernetesVersion: \$\$KUBERNETES_VERSION
 networking:
   dnsDomain: cluster.local
   serviceSubnet: 10.96.0.0/12

@@ -1,6 +1,4 @@
 #!/bin/bash
-shopt -s extglob
-
 # Load all the variables from the config.yaml file to variables
 source mukube_init_config
 
@@ -20,12 +18,15 @@ case $NODE_TYPE in
         echo "MASTER NODE SETUP"
         # Activate the ip_vs kernel module to allow for load balancing. Required by Keepalived.
         modprobe ip_vs
+
+        KUBERNETES_VERSION="$(kubeadm config print init-defaults | grep -m1 '^kubernetesVersion: ' | cut -f2 -d " ")"
         ;;& 
     master-init)
         echo "CREATING CLUSTER"
         echo "Bootstrapping virtual ip setup"
         mkdir -p /etc/kubernetes/manifests
         sed "s/\$\$NODE_NETWORK_INTERFACE/$(basename /sys/class/net/$NODE_NETWORK_INTERFACE)/" -i /etc/keepalived/keepalived.conf
+        sed "s/\$\$KUBERNETES_VERSION/$KUBERNETES_VERSION/" -i /etc/kubernetes/InitConfiguration.yaml
         mv /root/ha/* /etc/kubernetes/manifests
         init="kubeadm init --v=5 --config /etc/kubernetes/InitConfiguration.yaml --upload-certs" 
         printf "Creating cluster with command: \n\n\t $init \n\n"
@@ -43,6 +44,7 @@ case $NODE_TYPE in
         ;;&
     master-join | worker)
         echo "JOINING CLUSTER"
+        sed "s/\$\$KUBERNETES_VERSION/$KUBERNETES_VERSION/" -i /etc/kubernetes/JoinConfiguration.yaml
         init="kubeadm join --v=5 --config /etc/kubernetes/JoinConfiguration.yaml"
         printf "Joining cluster with command: \n\n\t $init \n\n"
         $init
@@ -55,15 +57,11 @@ case $NODE_TYPE in
         # Need to export KUBECONFIG for helm to contact the api-server
         export KUBECONFIG=/etc/kubernetes/admin.conf
         echo "Installing included helm charts"
-        for FILE in /root/helm-charts/!(values); do
-            release=$(echo $FILE | cut -f4 -d/ | cut -f1 -d#)
-            namespace=$(echo $FILE | cut -f4 -d/ | cut -f2 -d#)
-            values_file="/root/helm-charts/values/$release.yaml"
-            if [ -f "$values_file" ]; then
-                helm install --create-namespace -f "$values_file" -n $namespace $release $FILE
-            else
-                helm install --create-namespace -n $namespace $release $FILE
-            fi
+        kubectl apply -f /root/crds.yaml
+        for FILE in /root/manifest-*.yaml; do
+            NAMESPACE="$(cut -f2- -d - <<< "$FILE" | cut -f1 -d .)"
+            kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+            kubectl apply -n "$NAMESPACE" -f "$FILE"
         done
         ;;&
     master-join)
