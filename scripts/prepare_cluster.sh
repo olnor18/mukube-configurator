@@ -61,6 +61,9 @@ export PROXY_ENABLED="${PROXY_ENABLED:-false}"
 export PROXY_SERVER=${PROXY_SERVER:-http://nidhogg-lb-proxy.yggdrasil.svc.cluster.local:80}
 export KUBECONFIG_HOST
 export KUBECONFIG_SSH_KEY
+GITOPS_OPERATOR=${GITOPS_OPERATOR:-ARGO}
+FLUX_GIT_BRANCH=${FLUX_GIT_BRANCH:-main}
+FLUX_PATH=${FLUX_PATH:-clusters/my-cluster/flux-system}
 
 crio_sysconfig="$(mktemp)"
 cat <<EOF > "$crio_sysconfig"
@@ -131,20 +134,65 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
             mv "$OUTPUT_PATH_VALUES/nidhogg.yaml"{.tmp,}
         fi
 
-        rm -f "$OUTPUT_DIR_MASTER/root/crds.yaml"
-        for FILE in build/root/helm-charts/!(values); do
-            release=$(echo $FILE | cut -f4 -d/ | cut -f1 -d#)
-            namespace=$(echo $FILE | cut -f4 -d/ | cut -f2 -d#)
-            values_file="$OUTPUT_PATH_VALUES/nidhogg.yaml"
-            mkdir -p "$OUTPUT_DIR_MASTER/root"
-            if [ -f "$values_file" ]; then
-                helm template --skip-tests --include-crds -f "$values_file" -n $namespace $release $FILE > "$OUTPUT_DIR_MASTER/root/manifest-$namespace.yaml"
+
+        if [ "$GITOPS_OPERATOR" = "argo" ]; then
+            rm -f "$OUTPUT_DIR_MASTER/root/crds.yaml"
+            for FILE in build/root/helm-charts/!(values); do
+                release=$(echo $FILE | cut -f4 -d/ | cut -f1 -d#)
+                namespace=$(echo $FILE | cut -f4 -d/ | cut -f2 -d#)
+                values_file="$OUTPUT_PATH_VALUES/nidhogg.yaml"
+                mkdir -p "$OUTPUT_DIR_MASTER/root"
+                if [ -f "$values_file" ]; then
+                    helm template --skip-tests --include-crds -f "$values_file" -n $namespace $release $FILE > "$OUTPUT_DIR_MASTER/root/manifest-$namespace.yaml"
+                else
+                    helm template --skip-tests --include-crds -n $namespace $release $FILE > "$OUTPUT_DIR_MASTER/root/manifest-$namespace.yaml"
+                fi
+                yq e 'select(.kind == "CustomResourceDefinition")' "$OUTPUT_DIR_MASTER/root/manifest-$namespace.yaml" >> "$OUTPUT_DIR_MASTER/root/crds.yaml"
+            done
+        elif [ "$GITOPS_OPERATOR" = "flux" ]; then
+            GIT_DIR="build/$(sha256sum <<< "$FLUX_GIT_REPOSITORY" | awk '{print $1}')"
+            export GIT_SSH_COMMAND="ssh -o IdentitiesOnly=yes -F none -i \"$FLUX_SSH_KEY\""
+            GIT_TRANSPORT_PROTOCOL="$(cut -f1 -d : <<< "$FLUX_GIT_REPOSITORY")"
+            if [ -d "$GIT_DIR" ]; then
+                git -C "$GIT_DIR" fetch
+                git -C "$GIT_DIR" reset --hard "$FLUX_GIT_BRANCH"
             else
-                helm template --skip-tests --include-crds -n $namespace $release $FILE > "$OUTPUT_DIR_MASTER/root/manifest-$namespace.yaml"
+                if [ -n "$FLUX_GIT_TOKEN" ] && ([ "$GIT_TRANSPORT_PROTOCOL" = "http" ] || [ "$GIT_TRANSPORT_PROTOCOL" = "https" ]); then
+                    FLUX_GIT_REPOSITORY="$(sed -E "s:^(http[s]?\://)(.*@)?:\1x-access-token\:$FLUX_GIT_TOKEN@:" <<< "$FLUX_GIT_REPOSITORY")"
+                fi
+                git clone "$FLUX_GIT_REPOSITORY" "$GIT_DIR"
             fi
-            yq e 'select(.kind == "CustomResourceDefinition")' "$OUTPUT_DIR_MASTER/root/manifest-$namespace.yaml" >> "$OUTPUT_DIR_MASTER/root/crds.yaml"
-        done
-     fi
+            unset GIT_SSH_COMMAND
+
+            mkdir -p "$OUTPUT_DIR_MASTER/root"
+            (cd "$GIT_DIR" && kubectl kustomize "$FLUX_PATH") > "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
+            echo --- >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
+
+            if [ "$GIT_TRANSPORT_PROTOCOL" = "ssh" ]; then
+                GIT_SERVER="$(cut -f2 -d@ <<< "$FLUX_GIT_REPOSITORY" | cut -f1 -d : | cut -f1 -d /)"
+                kubectl create secret generic flux-system \
+                    --namespace=flux-system \
+                    --from-file=identity="$FLUX_SSH_KEY" \
+                    --from-file=identity.pub=<(ssh-keygen -f "$FLUX_SSH_KEY" -y) \
+                    --from-file=known_hosts=<(ssh-keyscan $GIT_SERVER) \
+                    --dry-run=client \
+                    --output=yaml >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
+            elif [ "$GIT_TRANSPORT_PROTOCOL" = "http" ] || [ "$GIT_TRANSPORT_PROTOCOL" = "https" ]; then
+                if [ -n "$FLUX_GIT_TOKEN" ]; then
+                    kubectl create secret generic flux-system \
+                        --namespace=flux-system \
+                        --from-literal=username=x-access-token \
+                        --from-file=password=<(echo -n "$FLUX_GIT_TOKEN") \
+                        --dry-run=client \
+                        --output=yaml >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
+                fi
+            else
+                echo "Unknown Git transport protoctol: $GIT_TRANSPORT_PROTOCOL"
+                exit 1
+            fi
+            yq e 'select(.kind == "CustomResourceDefinition")' "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml" > "$OUTPUT_DIR_MASTER/root/crds.yaml"
+        fi
+    fi
 
     ./scripts/prepare_master_config.sh $OUTPUT_PATH_CONF $VARIABLES
     ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_MASTER templates
