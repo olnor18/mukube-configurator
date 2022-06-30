@@ -191,6 +191,28 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
                 exit 1
             fi
             yq e 'select(.kind == "CustomResourceDefinition")' "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml" > "$OUTPUT_DIR_MASTER/root/crds.yaml"
+
+            if [ -n "$FLUX_CILIUM_HELM_RELEASE" ]; then
+                # TODO: Pull from HelmRepository manifest
+                CILIUM_HELM_REPO="https://helm.cilium.io/"
+
+                CHART="$(yq .spec.chart.spec.chart < "$GIT_DIR/$FLUX_CILIUM_HELM_RELEASE")"
+                CHART_NAME="$(yq .metadata.name < "$GIT_DIR/$FLUX_CILIUM_HELM_RELEASE")"
+                CHART_NAMESPACE="$(yq .metadata.namespace < "$GIT_DIR/$FLUX_CILIUM_HELM_RELEASE")"
+                CHART_VERSION="$(yq .spec.chart.spec.version < "$GIT_DIR/$FLUX_CILIUM_HELM_RELEASE")"
+                CHART_VALUES="$(yq .spec.values < "$GIT_DIR/$FLUX_CILIUM_HELM_RELEASE")"
+                if [ "$CHART_VALUES" = "null" ]; then
+                    CHART_VALUES=""
+                else
+                    # Don't enable any service monitors
+                    CHART_VALUES="$(yq -o json <<< "$CHART_VALUES" | jq 'del(.. | objects.serviceMonitor)' | yq -P)"
+                fi
+
+                helm template --repo "$CILIUM_HELM_REPO" --skip-tests --include-crds -f <(echo "$CHART_VALUES") --version "$CHART_VERSION" -n "$CHART_NAMESPACE" "$CHART_NAME" "$CHART" >> "$OUTPUT_DIR_MASTER/root/manifest-kube-system.yaml"
+                # Add Helm "ownership" labels
+                yq --inplace eval-all '. *= load("templates/cilium-helm-ownership.yaml")' "$OUTPUT_DIR_MASTER/root/manifest-kube-system.yaml"
+            fi
+            yq e 'select(.kind == "CustomResourceDefinition")' "$OUTPUT_DIR_MASTER/root/manifest-kube-system.yaml" >> "$OUTPUT_DIR_MASTER/root/crds.yaml"
         fi
     fi
 

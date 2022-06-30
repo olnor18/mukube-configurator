@@ -28,6 +28,7 @@ FLUX_GIT_BRANCH=
 FLUX_GIT_SSH_KEY=
 FLUX_GIT_TOKEN=
 FLUX_PATH=
+FLUX_CILIUM_HELM_RELEASE=
 ```
 
 #### NODE_CONTROL_PLANE_VIP
@@ -119,6 +120,9 @@ Load balancer IP to allocate for the ingress.
 
 ### FLUX_PATH
 (Optional) Path in the Git repository to deploy (default: `clusters/my-cluster/flux-system`)
+
+### FLUX_CILIUM_HELM_RELEASE
+(Optional) Path to HelmRelease for Cilium (default: ``).
 
 ### Example file
 ```
