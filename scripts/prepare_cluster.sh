@@ -107,6 +107,17 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
     cp templates/registries.conf $OUTPUT_DIR_MASTER/etc/containers/
     cp "$mirrors_conf" $OUTPUT_DIR_MASTER/etc/containers/registries.conf.d/mirrors.conf
 
+
+    if [ "$PROXY_ENABLED" = "true" ]; then
+        mkdir -p "$OUTPUT_DIR_MASTER/etc/sysconfig"
+        cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/sysconfig/crio"
+        if [ -n "$PROXY_CA_FILE" ]; then
+            mkdir -p "$OUTPUT_DIR_MASTER/etc/crio/ssl/"
+            cp "$PROXY_CA_FILE" "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
+            chmod 444 "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
+        fi
+    fi
+
     if [ $i = 0 ]; then
         OUTPUT_PATH_VALUES="$(mktemp -d)"
         trap "rm -r \"$OUTPUT_PATH_VALUES\"" EXIT
@@ -115,14 +126,10 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
         if [ "$EXTERNAL_DNS_ENABLED" = "true" ]; then
             eval "echo \"$(<templates/nidhogg-external-dns.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
         fi
+
         if [ "$PROXY_ENABLED" = "true" ]; then
-            mkdir -p "$OUTPUT_DIR_MASTER/etc/sysconfig"
-            cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/sysconfig/crio"
             eval "echo \"$(<templates/nidhogg-proxy.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
             if [ -n "$PROXY_CA_FILE" ]; then
-                mkdir -p "$OUTPUT_DIR_MASTER/etc/crio/ssl/"
-                cp "$PROXY_CA_FILE" "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
-                chmod 444 "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
                 cat templates/nidhogg-proxy-ca.yaml >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
             fi
         fi
