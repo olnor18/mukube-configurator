@@ -206,6 +206,13 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
                     --from-file=proxy_root_certificate="$PROXY_CA_FILE" \
                     --dry-run=client \
                     --output=yaml >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
+            elif [ "$FLUX_GIT_BRANCH" != "master" ] && [ "$FLUX_GIT_BRANCH" != "main" ]; then
+                echo --- >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
+                kubectl create configmap cluster-vars \
+                    --namespace=flux-system \
+                    --from-literal=branch="$FLUX_GIT_BRANCH" \
+                    --dry-run=client \
+                    --output=yaml >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
             fi
             yq e 'select(.kind == "CustomResourceDefinition")' "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml" > "$OUTPUT_DIR_MASTER/root/crds.yaml"
 
