@@ -197,6 +197,16 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
                 echo "Unknown Git transport protoctol: $GIT_TRANSPORT_PROTOCOL"
                 exit 1
             fi
+
+            if [ "$PROXY_ENABLED" = "true" ] && [ -n "$PROXY_CA_FILE" ]; then
+                echo --- >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
+                kubectl create configmap cluster-vars \
+                    --namespace=flux-system \
+                    --from-literal=proxy_server="$PROXY_SERVER" \
+                    --from-file=proxy_root_certificate="$PROXY_CA_FILE" \
+                    --dry-run=client \
+                    --output=yaml >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
+            fi
             yq e 'select(.kind == "CustomResourceDefinition")' "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml" > "$OUTPUT_DIR_MASTER/root/crds.yaml"
 
             if [ -n "$FLUX_CILIUM_HELM_RELEASE" ]; then
