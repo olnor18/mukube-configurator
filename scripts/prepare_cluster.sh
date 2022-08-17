@@ -109,8 +109,8 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
 
 
     if [ "$PROXY_ENABLED" = "true" ]; then
-        mkdir -p "$OUTPUT_DIR_MASTER/etc/sysconfig"
-        cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/sysconfig/crio"
+        mkdir -p "$OUTPUT_DIR_MASTER/etc/default"
+        cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/default/crio"
         if [ -n "$PROXY_CA_FILE" ]; then
             mkdir -p "$OUTPUT_DIR_MASTER/etc/crio/ssl/"
             cp "$PROXY_CA_FILE" "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
@@ -253,8 +253,8 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
     cp templates/registries.conf $OUTPUT_DIR_WORKER/etc/containers/
     cp "$mirrors_conf" $OUTPUT_DIR_WORKER/etc/containers/registries.conf.d/mirrors.conf
     if [ "$PROXY_ENABLED" = "true" ]; then
-        mkdir -p "$OUTPUT_DIR_WORKER/etc/sysconfig"
-        cp "$crio_sysconfig" "$OUTPUT_DIR_WORKER/etc/sysconfig/crio"
+        mkdir -p "$OUTPUT_DIR_WORKER/etc/default"
+        cp "$crio_sysconfig" "$OUTPUT_DIR_WORKER/etc/default/crio"
         if [ -n "$PROXY_CA_FILE" ]; then
             mkdir -p "$OUTPUT_DIR_WORKER/etc/crio/ssl/"
             cp "$PROXY_CA_FILE" "$OUTPUT_DIR_WORKER/etc/crio/ssl/root.pem"
