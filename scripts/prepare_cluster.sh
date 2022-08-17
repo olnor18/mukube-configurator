@@ -157,17 +157,17 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
                 yq e 'select(.kind == "CustomResourceDefinition")' "$OUTPUT_DIR_MASTER/root/manifest-$namespace.yaml" >> "$OUTPUT_DIR_MASTER/root/crds.yaml"
             done
         elif [ "$GITOPS_OPERATOR" = "flux" ]; then
-            GIT_DIR="build/$(sha256sum <<< "$FLUX_GIT_REPOSITORY" | awk '{print $1}')"
+            GIT_DIR="build/$(sha256sum <<< "$FLUX_GIT_REPOSITORY$FLUX_GIT_BRANCH" | awk '{print $1}')"
             export GIT_SSH_COMMAND="ssh -o IdentitiesOnly=yes -F none -i \"$FLUX_SSH_KEY\""
             GIT_TRANSPORT_PROTOCOL="$(cut -f1 -d : <<< "$FLUX_GIT_REPOSITORY")"
             if [ -d "$GIT_DIR" ]; then
                 git -C "$GIT_DIR" fetch
-                git -C "$GIT_DIR" reset --hard "$FLUX_GIT_BRANCH"
+                git -C "$GIT_DIR" reset --hard "origin/$FLUX_GIT_BRANCH"
             else
                 if [ -n "$FLUX_GIT_TOKEN" ] && ([ "$GIT_TRANSPORT_PROTOCOL" = "http" ] || [ "$GIT_TRANSPORT_PROTOCOL" = "https" ]); then
                     FLUX_GIT_REPOSITORY="$(sed -E "s:^(http[s]?\://)(.*@)?:\1x-access-token\:$FLUX_GIT_TOKEN@:" <<< "$FLUX_GIT_REPOSITORY")"
                 fi
-                git clone "$FLUX_GIT_REPOSITORY" "$GIT_DIR"
+                git clone --single-branch --branch "$FLUX_GIT_BRANCH" "$FLUX_GIT_REPOSITORY" "$GIT_DIR"
             fi
             unset GIT_SSH_COMMAND
 
