@@ -84,6 +84,20 @@ if [ -n "$PROXY_CA_FILE" ]; then
     echo SSL_CERT_FILE=/etc/crio/ssl/root.pem >> "$crio_sysconfig"
 fi
 
+template_cluster_vars() {
+    local -n vars="$1"
+    args=()
+    for var in "${!vars[@]}"; do
+        args+=("--from-literal=$var=${vars[$var]}")
+    done
+    echo ---
+    kubectl create "${@:2}" cluster-vars \
+        --namespace=flux-system \
+        "${args[@]}" \
+        --dry-run=client \
+        --output=yaml
+}
+
 for ((i=0; i<${#MASTERS[@]}; i++)); do
     export NODE_NETWORK_INTERFACE=${INTERFACES[i]:-en*}
     export NODE_HOST_IP=${MASTERS[i]}
@@ -198,27 +212,23 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
                 exit 1
             fi
 
-            declare -A cluster_vars
+            declare -A cluster_vars # configmap
+            declare -A cluster_vars_secret
             cluster_vars[lb_ip_range_start]="$LB_IP_RANGE_START"
             cluster_vars[lb_ip_range_stop]="$LB_IP_RANGE_STOP"
 
+            if [ -n "$VAULT_SERVER" ] && [ -n "$VAULT_TOKEN" ]; then
+                cluster_vars_secret[vault_server]="$VAULT_SERVER"
+                cluster_vars_secret[vault_token]="$VAULT_TOKEN"
+            fi
             if [ "$PROXY_ENABLED" = "true" ] && [ -n "$PROXY_CA_FILE" ]; then
                 cluster_vars[proxy_server]="$PROXY_SERVER"
                 cluster_vars[proxy_root_certificate]="$(<"$PROXY_CA_FILE")"
             elif [ "$FLUX_GIT_BRANCH" != "master" ] && [ "$FLUX_GIT_BRANCH" != "main" ]; then
                 cluster_vars[branch]="$FLUX_GIT_BRANCH"
             fi
-
-            args=()
-            for cluster_var in "${!cluster_vars[@]}"; do
-                args+=("--from-literal=$cluster_var=${cluster_vars[$cluster_var]}")
-            done
-            echo --- >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
-            kubectl create configmap cluster-vars \
-                --namespace=flux-system \
-                "${args[@]}" \
-                --dry-run=client \
-                --output=yaml >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
+            template_cluster_vars cluster_vars configmap >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
+            template_cluster_vars cluster_vars_secret secret generic >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
             yq e 'select(.kind == "CustomResourceDefinition")' "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml" > "$OUTPUT_DIR_MASTER/root/crds.yaml"
 
             if [ -n "$FLUX_CILIUM_HELM_RELEASE" ]; then
