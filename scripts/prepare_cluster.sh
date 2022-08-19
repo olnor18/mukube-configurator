@@ -199,6 +199,9 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
             fi
 
             declare -A cluster_vars
+            cluster_vars[lb_ip_range_start]="$LB_IP_RANGE_START"
+            cluster_vars[lb_ip_range_stop]="$LB_IP_RANGE_STOP"
+
             if [ "$PROXY_ENABLED" = "true" ] && [ -n "$PROXY_CA_FILE" ]; then
                 cluster_vars[proxy_server]="$PROXY_SERVER"
                 cluster_vars[proxy_root_certificate]="$(<"$PROXY_CA_FILE")"
