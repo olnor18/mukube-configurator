@@ -84,6 +84,20 @@ if [ -n "$PROXY_CA_FILE" ]; then
     echo SSL_CERT_FILE=/etc/crio/ssl/root.pem >> "$crio_sysconfig"
 fi
 
+template_cluster_vars() {
+    local -n vars="$1"
+    args=()
+    for var in "${!vars[@]}"; do
+        args+=("--from-literal=$var=${vars[$var]}")
+    done
+    echo ---
+    kubectl create "${@:2}" cluster-vars \
+        --namespace=flux-system \
+        "${args[@]}" \
+        --dry-run=client \
+        --output=yaml
+}
+
 for ((i=0; i<${#MASTERS[@]}; i++)); do
     export NODE_NETWORK_INTERFACE=${INTERFACES[i]:-en*}
     export NODE_HOST_IP=${MASTERS[i]}
@@ -107,6 +121,17 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
     cp templates/registries.conf $OUTPUT_DIR_MASTER/etc/containers/
     cp "$mirrors_conf" $OUTPUT_DIR_MASTER/etc/containers/registries.conf.d/mirrors.conf
 
+
+    if [ "$PROXY_ENABLED" = "true" ]; then
+        mkdir -p "$OUTPUT_DIR_MASTER/etc/default"
+        cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/default/crio"
+        if [ -n "$PROXY_CA_FILE" ]; then
+            mkdir -p "$OUTPUT_DIR_MASTER/etc/crio/ssl/"
+            cp "$PROXY_CA_FILE" "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
+            chmod 444 "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
+        fi
+    fi
+
     if [ $i = 0 ]; then
         OUTPUT_PATH_VALUES="$(mktemp -d)"
         trap "rm -r \"$OUTPUT_PATH_VALUES\"" EXIT
@@ -115,14 +140,10 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
         if [ "$EXTERNAL_DNS_ENABLED" = "true" ]; then
             eval "echo \"$(<templates/nidhogg-external-dns.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
         fi
+
         if [ "$PROXY_ENABLED" = "true" ]; then
-            mkdir -p "$OUTPUT_DIR_MASTER/etc/sysconfig"
-            cp "$crio_sysconfig" "$OUTPUT_DIR_MASTER/etc/sysconfig/crio"
             eval "echo \"$(<templates/nidhogg-proxy.yaml)\"" >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
             if [ -n "$PROXY_CA_FILE" ]; then
-                mkdir -p "$OUTPUT_DIR_MASTER/etc/crio/ssl/"
-                cp "$PROXY_CA_FILE" "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
-                chmod 444 "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
                 cat templates/nidhogg-proxy-ca.yaml >> "$OUTPUT_PATH_VALUES/nidhogg.yaml"
             fi
         fi
@@ -150,17 +171,17 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
                 yq e 'select(.kind == "CustomResourceDefinition")' "$OUTPUT_DIR_MASTER/root/manifest-$namespace.yaml" >> "$OUTPUT_DIR_MASTER/root/crds.yaml"
             done
         elif [ "$GITOPS_OPERATOR" = "flux" ]; then
-            GIT_DIR="build/$(sha256sum <<< "$FLUX_GIT_REPOSITORY" | awk '{print $1}')"
+            GIT_DIR="build/$(sha256sum <<< "$FLUX_GIT_REPOSITORY$FLUX_GIT_BRANCH" | awk '{print $1}')"
             export GIT_SSH_COMMAND="ssh -o IdentitiesOnly=yes -F none -i \"$FLUX_SSH_KEY\""
             GIT_TRANSPORT_PROTOCOL="$(cut -f1 -d : <<< "$FLUX_GIT_REPOSITORY")"
             if [ -d "$GIT_DIR" ]; then
                 git -C "$GIT_DIR" fetch
-                git -C "$GIT_DIR" reset --hard "$FLUX_GIT_BRANCH"
+                git -C "$GIT_DIR" reset --hard "origin/$FLUX_GIT_BRANCH"
             else
                 if [ -n "$FLUX_GIT_TOKEN" ] && ([ "$GIT_TRANSPORT_PROTOCOL" = "http" ] || [ "$GIT_TRANSPORT_PROTOCOL" = "https" ]); then
                     FLUX_GIT_REPOSITORY="$(sed -E "s:^(http[s]?\://)(.*@)?:\1x-access-token\:$FLUX_GIT_TOKEN@:" <<< "$FLUX_GIT_REPOSITORY")"
                 fi
-                git clone "$FLUX_GIT_REPOSITORY" "$GIT_DIR"
+                git clone --single-branch --branch "$FLUX_GIT_BRANCH" "$FLUX_GIT_REPOSITORY" "$GIT_DIR"
             fi
             unset GIT_SSH_COMMAND
 
@@ -190,6 +211,24 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
                 echo "Unknown Git transport protoctol: $GIT_TRANSPORT_PROTOCOL"
                 exit 1
             fi
+
+            declare -A cluster_vars # configmap
+            declare -A cluster_vars_secret
+            cluster_vars[lb_ip_range_start]="$LB_IP_RANGE_START"
+            cluster_vars[lb_ip_range_stop]="$LB_IP_RANGE_STOP"
+
+            if [ -n "$VAULT_SERVER" ] && [ -n "$VAULT_TOKEN" ]; then
+                cluster_vars_secret[vault_server]="$VAULT_SERVER"
+                cluster_vars_secret[vault_token]="$VAULT_TOKEN"
+            fi
+            if [ "$PROXY_ENABLED" = "true" ] && [ -n "$PROXY_CA_FILE" ]; then
+                cluster_vars[proxy_server]="$PROXY_SERVER"
+                cluster_vars[proxy_root_certificate]="$(<"$PROXY_CA_FILE")"
+            elif [ "$FLUX_GIT_BRANCH" != "master" ] && [ "$FLUX_GIT_BRANCH" != "main" ]; then
+                cluster_vars[branch]="$FLUX_GIT_BRANCH"
+            fi
+            template_cluster_vars cluster_vars configmap >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
+            template_cluster_vars cluster_vars_secret secret generic >> "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml"
             yq e 'select(.kind == "CustomResourceDefinition")' "$OUTPUT_DIR_MASTER/root/manifest-flux-system.yaml" > "$OUTPUT_DIR_MASTER/root/crds.yaml"
 
             if [ -n "$FLUX_CILIUM_HELM_RELEASE" ]; then
@@ -246,12 +285,12 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
     cp templates/registries.conf $OUTPUT_DIR_WORKER/etc/containers/
     cp "$mirrors_conf" $OUTPUT_DIR_WORKER/etc/containers/registries.conf.d/mirrors.conf
     if [ "$PROXY_ENABLED" = "true" ]; then
-        mkdir -p "$OUTPUT_DIR_WORKER/etc/sysconfig"
-        cp "$crio_sysconfig" "$OUTPUT_DIR_WORKER/etc/sysconfig/crio"
+        mkdir -p "$OUTPUT_DIR_WORKER/etc/default"
+        cp "$crio_sysconfig" "$OUTPUT_DIR_WORKER/etc/default/crio"
         if [ -n "$PROXY_CA_FILE" ]; then
             mkdir -p "$OUTPUT_DIR_WORKER/etc/crio/ssl/"
             cp "$PROXY_CA_FILE" "$OUTPUT_DIR_WORKER/etc/crio/ssl/root.pem"
-            chmod 444 "$OUTPUT_DIR_MASTER/etc/crio/ssl/root.pem"
+            chmod 444 "$OUTPUT_DIR_WORKER/etc/crio/ssl/root.pem"
         fi
     fi
     cp templates/boot.sh $OUTPUT_DIR_WORKER
