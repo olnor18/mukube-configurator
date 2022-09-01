@@ -30,7 +30,8 @@ FLUX_GIT_TOKEN=
 FLUX_PATH=
 FLUX_CILIUM_HELM_RELEASE=
 VAULT_SERVER=
-VAULT_TOKEN=
+VAULT_ROLE_ID=
+VAULT_SECRET_ID=
 ```
 
 #### NODE_CONTROL_PLANE_VIP
@@ -129,8 +130,11 @@ Load balancer IP to allocate for the ingress.
 ### VAULT_SERVER
 (Optional) [Vault](https://www.vaultproject.io/) server which [External Secrets](https://external-secrets.io) should use (default: ``).
 
-### VAULT_TOKEN
-(Required if `VAULT_SERVER` is specified) Token to the [Vault](https://www.vaultproject.io/) server (default: ``).
+### VAULT_ROLE_ID
+(Required if `VAULT_SERVER` is specified) AppRole RoleID to the [Vault](https://www.vaultproject.io/) server (default: ``).
+
+### VAULT_SECRET_ID
+(Required if `VAULT_SERVER` is specified) AppRole SecretID to the [Vault](https://www.vaultproject.io/) server (default: ``).
 
 ### Example file
 ```
