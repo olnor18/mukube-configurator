@@ -22,7 +22,6 @@ EXTERNAL_DNS_ENABLED=
 EXTERNAL_DNS_ZONE=
 EXTERNAL_DNS_PDNS_SERVER=
 EXTERNAL_DNS_PDNS_API_KEY=
-GITOPS_OPERATOR=
 FLUX_GIT_REPOSITORY=
 FLUX_GIT_BRANCH=
 FLUX_GIT_SSH_KEY=
@@ -106,20 +105,17 @@ Load balancer IP to allocate for the ingress.
 ### EXTERNAL_DNS_PDNS_API_KEY
 (Required if `EXTERNAL_DNS_ENABLED` is `true`) PowerDNS API key.
 
-### GITOPS_OPERATOR
-(Optional) GitOps Operator, either `argo` or `flux` (default: `argo`).
-
 ### FLUX_GIT_REPOSITORY
-(Required if `GITOPS_OPERATOR` is `flux`) Git repository to clone, ex: `ssh://git@github.com/johndoe/flux-test.git` for SSH or `https://dev.azure.com/johndoe/_git/flux-test` for HTTP.
+(Required) Git repository to clone, ex: `ssh://git@github.com/johndoe/flux-test.git` for SSH or `https://dev.azure.com/johndoe/_git/flux-test` for HTTP.
 
 ### FLUX_GIT_BRANCH
 (Optional) Git branch to monitor (default: `main`).
 
 ### FLUX_GIT_SSH_KEY
-(Required if `GITOPS_OPERATOR` is `flux` and `FLUX_GIT_REPOSITORY` is a SSH URL) SSH key to use for cloning the Git repository.
+(Required if `FLUX_GIT_REPOSITORY` is a SSH URL) SSH key to use for cloning the Git repository.
 
 ### FLUX_GIT_TOKEN
-(Required if `GITOPS_OPERATOR` is `flux` and `FLUX_GIT_REPOSITORY` is a HTTP URL and authentication is required) Token to use for cloning the Git repository.
+(Required if `FLUX_GIT_REPOSITORY` is a HTTP URL and authentication is required) Token to use for cloning the Git repository.
 
 ### FLUX_PATH
 (Optional) Path in the Git repository to deploy (default: `clusters/my-cluster/flux-system`)
