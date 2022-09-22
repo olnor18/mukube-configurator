@@ -31,6 +31,7 @@ FLUX_CILIUM_HELM_RELEASE=
 VAULT_SERVER=
 VAULT_ROLE_ID=
 VAULT_SECRET_ID=
+SYSTEM_RESERVED_MEMORY=
 ```
 
 #### NODE_CONTROL_PLANE_VIP
@@ -131,6 +132,9 @@ Load balancer IP to allocate for the ingress.
 
 ### VAULT_SECRET_ID
 (Required if `VAULT_SERVER` is specified) AppRole SecretID to the [Vault](https://www.vaultproject.io/) server (default: ``).
+
+### SYSTEM_RESERVED_MEMORY
+(Optional) How many GiB of memory reserved for the system that cannot be consumed by Kubernetes (default: `21`).
 
 ### Example file
 ```

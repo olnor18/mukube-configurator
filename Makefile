@@ -1,6 +1,6 @@
 CONFIG ?= input/config
 
-default: $(CONFIG) 
+default: $(CONFIG)
 	./scripts/prepare_cluster.sh build/nodes $(CONFIG)
 	./scripts/build_cluster.sh build/nodes
 
