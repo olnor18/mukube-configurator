@@ -1,6 +1,0 @@
-yggdrasil:
-  loadbalancer:
-    ipRangeStart: $LB_IP_RANGE_START
-    ipRangeStop: $LB_IP_RANGE_STOP
-  ingress:
-    loadBalancerIP: $INGRESS_LB_IP_ADDRESS
