@@ -32,6 +32,7 @@ VAULT_SERVER=
 VAULT_ROLE_ID=
 VAULT_SECRET_ID=
 SYSTEM_RESERVED_MEMORY=
+ROOTFS_SIZE=
 ```
 
 #### NODE_CONTROL_PLANE_VIP
@@ -135,6 +136,9 @@ Load balancer IP to allocate for the ingress.
 
 ### SYSTEM_RESERVED_MEMORY
 (Optional) How many GiB of memory reserved for the system that cannot be consumed by Kubernetes (default: `21`).
+
+### ROOTFS_SIZE
+(Optional) Size of the rootfs in GiB. Please also edit `SYSTEM_RESERVED_MEMORY` if you change this (default: `20`)
 
 ### Example file
 ```

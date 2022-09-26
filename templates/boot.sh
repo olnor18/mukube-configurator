@@ -13,6 +13,7 @@ case $NODE_TYPE in
         # General setup
         hostname $NODE_NAME
         echo  "127.0.1.1	$NODE_NAME" >> /etc/hosts
+        mount -o remount,size=$${ROOTFS_SIZE}G /
         ;;&
     master*)
         echo "MASTER NODE SETUP"
