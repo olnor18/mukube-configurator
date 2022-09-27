@@ -63,6 +63,7 @@ export KUBECONFIG_HOST
 export KUBECONFIG_SSH_KEY
 FLUX_GIT_BRANCH=${FLUX_GIT_BRANCH:-main}
 FLUX_PATH=${FLUX_PATH:-clusters/my-cluster/flux-system}
+ROOTFS_SIZE=${ROOTFS_SIZE:-20}
 
 crio_sysconfig="$(mktemp)"
 cat <<EOF > "$crio_sysconfig"
@@ -226,6 +227,7 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
     ./scripts/prepare_master_HA.sh $OUTPUT_DIR_MASTER templates
     ./scripts/prepare_k8s_configs.sh $OUTPUT_DIR_MASTER templates
     cp templates/boot.sh $OUTPUT_DIR_MASTER
+    sed -e "s/\$\${ROOTFS_SIZE}/$ROOTFS_SIZE/" -i $OUTPUT_DIR_MASTER/boot.sh
     if [ -n "$KUBECONFIG_HOST" ]; then
         mkdir $OUTPUT_DIR_MASTER/root/k8s/ $OUTPUT_DIR_MASTER/root/.ssh
         cp templates/readonly.yaml $OUTPUT_DIR_MASTER/root/k8s/
@@ -260,6 +262,7 @@ for ((i=0; i<${#WORKERS[@]}; i++)); do
         fi
     fi
     cp templates/boot.sh $OUTPUT_DIR_WORKER
+    sed -e "s/\$\${ROOTFS_SIZE}/$ROOTFS_SIZE/" -i $OUTPUT_DIR_MASTER/boot.sh
     ./scripts/prepare_node_config.sh $OUTPUT_DIR_WORKER/mukube_init_config $VARIABLES
     ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_WORKER templates
     ./scripts/prepare_k8s_configs.sh $OUTPUT_DIR_WORKER templates
