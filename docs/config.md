@@ -33,6 +33,8 @@ VAULT_ROLE_ID=
 VAULT_SECRET_ID=
 SYSTEM_RESERVED_MEMORY=
 ROOTFS_SIZE=
+IS_IN_AZURE=
+AZURE_VXLAN_IPRANGE=
 ```
 
 #### NODE_CONTROL_PLANE_VIP
@@ -45,7 +47,7 @@ The ip address of the control plane. If the first master node is being configure
 Either true or false. If this master node should be tainted, meaning that no pods other than the static pods, will be scheduled to run here. Defaluts to true.
 
 #### NODE_NETWORK_INTERFACES
-(Optional) The names of the network interfaces where the devices are discoverable (default: `en*`).
+(Optional) The names of the network interfaces where the devices are discoverable (default: `en*`) in a comma-seperated format. The amount of interfaces specified has to be equal the sum of masters and workers.
 
 #### MASTER_VIP_CLUSTER_IPS
 A comma separated list of ips of all the master nodes.
@@ -139,6 +141,13 @@ Load balancer IP to allocate for the ingress.
 
 ### ROOTFS_SIZE
 (Optional) Size of the rootfs in GiB. Please also edit `SYSTEM_RESERVED_MEMORY` if you change this (default: `20`)
+
+### IS_IN_AZURE
+(Optional) If this value is set to "true", the mukube will be configured for setup on Azure VMs. Anything else than "true" will be treated as "false", and the mukube will therefore be configured as not running on Azure VMs.
+When running in Azure, a VXLAN will be used to simulate a layer 2 network using layer 4 components. Cilium also uses a VXLAN, and thus some of the IP addresses and ranges is defaulted to make sure it does not interfere with Cilium.
+
+### AZURE_VXLAN_IPRANGE
+(Optional) If the "IS_IN_AZURE" is set to "true", this value can be used to set the range in which the VXLAN IP will be from. The last octet of the IP range will be replace with the last octet of the NODE_HOST_IP, such that it is unique for all nodes. If this IP range is set, make sure that the `NODE_CONTROL_PLANE_VIP` is within this range. If `IS_IN_AZURE` is not true, then this option is not used and therefore its value is ignored. (default: `10.2.0.0/24`).
 
 ### Example file
 ```

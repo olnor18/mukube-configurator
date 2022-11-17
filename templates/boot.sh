@@ -17,6 +17,10 @@ case $NODE_TYPE in
         ;;&
     master*)
         echo "MASTER NODE SETUP"
+        if [ $IS_IN_AZURE == "true" ]; then
+            /bin/bash /azure-health.sh
+        fi
+
         # Activate the ip_vs kernel module to allow for load balancing. Required by Keepalived.
         modprobe ip_vs
 
@@ -26,7 +30,12 @@ case $NODE_TYPE in
         echo "CREATING CLUSTER"
         echo "Bootstrapping virtual ip setup"
         mkdir -p /etc/kubernetes/manifests
-        sed "s/\$\$NODE_NETWORK_INTERFACE/$(basename /sys/class/net/$NODE_NETWORK_INTERFACE)/" -i /etc/keepalived/keepalived.conf
+        # If in Azure, then replace the "NODE_NETWORK_INTERFACE" variable in "keepalived.conf" with "vxlan0", else replace it with the network interfaces provided by the config
+        if [ $IS_IN_AZURE == "true" ]; then
+            sed "s/\$\$NODE_NETWORK_INTERFACE/vxlan0/" -i /etc/keepalived/keepalived.conf
+        else
+            sed "s/\$\$NODE_NETWORK_INTERFACE/$(basename /sys/class/net/$NODE_NETWORK_INTERFACE)/" -i /etc/keepalived/keepalived.conf
+        fi
         sed "s/\$\$KUBERNETES_VERSION/$KUBERNETES_VERSION/" -i /etc/kubernetes/InitConfiguration.yaml
         mv /root/ha/* /etc/kubernetes/manifests
         init="kubeadm init --v=5 --config /etc/kubernetes/InitConfiguration.yaml --upload-certs" 
@@ -67,7 +76,11 @@ case $NODE_TYPE in
         ;;&
     master-join)
         echo "Joining virtual ip setup"
-        sed "s/\$\$NODE_NETWORK_INTERFACE/$(basename /sys/class/net/$NODE_NETWORK_INTERFACE)/" -i /etc/keepalived/keepalived.conf
+        if [ $IS_IN_AZURE == "true" ]; then
+            sed "s/\$\$NODE_NETWORK_INTERFACE/vxlan0/" -i /etc/keepalived/keepalived.conf
+        else
+            sed "s/\$\$NODE_NETWORK_INTERFACE/$(basename /sys/class/net/$NODE_NETWORK_INTERFACE)/" -i /etc/keepalived/keepalived.conf
+        fi
         mv /root/ha/* /etc/kubernetes/manifests
         ;;&
     master*)
