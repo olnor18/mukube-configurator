@@ -47,7 +47,6 @@ then
     exit 1
 fi
 
-
 # Export all variables for script scope
 export NODE_JOIN_TOKEN=$NODE_JOIN_TOKEN
 export MASTER_CERTIFICATE_KEY=$MASTER_CERTIFICATE_KEY
@@ -64,6 +63,8 @@ export KUBECONFIG_SSH_KEY
 FLUX_GIT_BRANCH=${FLUX_GIT_BRANCH:-main}
 FLUX_PATH=${FLUX_PATH:-clusters/my-cluster/flux-system}
 ROOTFS_SIZE=${ROOTFS_SIZE:-20}
+
+AZURE_VXLAN_IPRANGE=${AZURE_VXLAN_IPRANGE:-10.2.0.0/24}
 
 crio_sysconfig="$(mktemp)"
 cat <<EOF > "$crio_sysconfig"
@@ -222,11 +223,25 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
         yq e 'select(.kind == "CustomResourceDefinition")' "$OUTPUT_DIR_MASTER/root/manifest-kube-system.yaml" >> "$OUTPUT_DIR_MASTER/root/crds.yaml"
     fi
 
+    # Every node's VXLAN needs a unique IP range where the VIP of the k8s control plane is accessible.
+    if [ $IS_IN_AZURE == "true" ]; then
+        # Retrieve the last octet of the IP of the current node
+        unique_fourth_octet=$(cut -d . -f 4 <<< "$NODE_HOST_IP")
+        # Create a new IP range using every octet of AZURE_VXLAN_IPRANGE before the last ".", add a "." and the unique fourth octet from above.
+        # Finally add a "/" and everything from AZURE_VXLAN_IPRANGE after the last "/". 
+        # It should create a new unique (for each node) IP range for the "vxlan0.network" file created in "prepare_systemd_network.sh" script.  
+        newrange=${AZURE_VXLAN_IPRANGE%.*}.$unique_fourth_octet/${AZURE_VXLAN_IPRANGE#*/}
+        export VXLAN_IP=$newrange
+
+        cp templates/azure-report-ready.sh $OUTPUT_DIR_MASTER
+    fi
+
     ./scripts/prepare_master_config.sh $OUTPUT_PATH_CONF $VARIABLES
-    ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_MASTER templates
+    ./scripts/prepare_systemd_network.sh $OUTPUT_DIR_MASTER templates $VARIABLES
     ./scripts/prepare_master_HA.sh $OUTPUT_DIR_MASTER templates
     ./scripts/prepare_k8s_configs.sh $OUTPUT_DIR_MASTER templates
     cp templates/boot.sh $OUTPUT_DIR_MASTER
+    
     sed -e "s/\$\${ROOTFS_SIZE}/$ROOTFS_SIZE/" -i $OUTPUT_DIR_MASTER/boot.sh
     if [ -n "$KUBECONFIG_HOST" ]; then
         mkdir $OUTPUT_DIR_MASTER/root/k8s/ $OUTPUT_DIR_MASTER/root/.ssh

@@ -1,0 +1,8 @@
+[NetDev]
+Name=vxlan0
+Kind=vxlan
+
+[VXLAN]
+VNI=100
+Independent=true
+DestinationPort=5000
