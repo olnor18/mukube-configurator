@@ -18,7 +18,7 @@ case $NODE_TYPE in
     master*)
         echo "MASTER NODE SETUP"
         if [ $IS_IN_AZURE == "true" ]; then
-            /bin/bash /azure-health.sh
+            /bin/bash /azure-report-ready.sh
         fi
 
         # Activate the ip_vs kernel module to allow for load balancing. Required by Keepalived.
