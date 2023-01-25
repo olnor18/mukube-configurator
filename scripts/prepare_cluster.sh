@@ -250,6 +250,15 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
         chmod 600 $OUTPUT_DIR_MASTER/root/.ssh/kubeconfig-key.pub
         sed -e "s/\$\$KUBECONFIG_HOST/$KUBECONFIG_HOST/" -i $OUTPUT_DIR_MASTER/boot.sh
     fi
+
+    if [ -n "$SSH_PUB_KEYS_FILE" ]; then
+        mkdir -p $OUTPUT_DIR_MASTER/root/.ssh
+        if [ -f "input/$SSH_PUB_KEYS_FILE" ]; then
+            cp "input/$SSH_PUB_KEYS_FILE" "$OUTPUT_DIR_MASTER/root/.ssh/authorized_keys"
+        else
+            cp "$SSH_PUB_KEYS_FILE" "$OUTPUT_DIR_MASTER/root/.ssh/authorized_keys"
+        fi
+    fi
 done
 
 # Prepare the worker nodes

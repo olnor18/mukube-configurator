@@ -14,6 +14,10 @@ case $NODE_TYPE in
         hostname $NODE_NAME
         echo  "127.0.1.1	$NODE_NAME" >> /etc/hosts
         mount -o remount,size=$${ROOTFS_SIZE}G /
+
+        if [ -n "$SSH_PUB_KEYS_FILE" ]; then
+            systemctl start ssh
+        fi
         ;;&
     master*)
         echo "MASTER NODE SETUP"
