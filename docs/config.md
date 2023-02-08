@@ -149,6 +149,9 @@ When running in Azure, a VXLAN will be used to simulate a layer 2 network using 
 ### AZURE_VXLAN_IPRANGE
 (Optional) If the "IS_IN_AZURE" is set to "true", this value can be used to set the range in which the VXLAN IP will be from. The last octet of the IP range will be replace with the last octet of the NODE_HOST_IP, such that it is unique for all nodes. If this IP range is set, make sure that the `NODE_CONTROL_PLANE_VIP` is within this range. If `IS_IN_AZURE` is not true, then this option is not used and therefore its value is ignored. (default: `10.2.0.0/24`).
 
+### SSH_PUB_KEYS_FILE
+(Optional) This is the name of the file containing the SSH public keys that will be inserted into the "/root/.ssh/authorized_keys". This file has to be present in the input folder. This setting will also make sure that the openssh-server is enabled.
+
 ### Example file
 ```
 NODE_CONTROL_PLANE_VIP=192.168.1.150
