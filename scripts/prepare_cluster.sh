@@ -184,6 +184,8 @@ for ((i=0; i<${#MASTERS[@]}; i++)); do
         cluster_vars[lb_ip_range_start]="$LB_IP_RANGE_START"
         cluster_vars[lb_ip_range_stop]="$LB_IP_RANGE_STOP"
 
+        cluster_vars[supply_chain_branch]="feature/gitlab-poc"
+
         mkdir -p "$OUTPUT_DIR_MASTER/root/"
         if [ -n "$VAULT_SERVER" ] && [ -n "$VAULT_ROLE_ID" ] && [ -n "$VAULT_SECRET_ID" ]; then
             cluster_vars[vault_server]="$VAULT_SERVER"
