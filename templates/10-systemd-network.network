@@ -6,6 +6,7 @@ Address=${NODE_HOST_IP}/${MASTER_VIP_CLUSTER_CIDR}
 Gateway=${NODE_GATEWAY_IP}
 DNS=${CLUSTER_DNS}
 LinkLocalAddressing=no
+Domains=local.
 
 [DHCP]
 ClientIdentifier=mac
